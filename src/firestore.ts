@@ -13,7 +13,7 @@ export async function saveGameHistory(userId: string, records: number[]): Promis
     try {
         const historyRef = doc(db, 'users', userId, 'gameData', 'history');
         const data: GameHistory = {
-            records: records.slice(-20), // Keep only last 20 records
+            records: records.slice(-50), // Keep only last 50 records
             updatedAt: Date.now()
         };
         await setDoc(historyRef, data);

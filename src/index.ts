@@ -13,6 +13,7 @@ let history: number[] = loadHistory();
 // DOM elements
 const displayElement = document.getElementById('stopwatchDisplay') as HTMLDivElement;
 const chartCanvas = document.getElementById('historyChart') as HTMLCanvasElement;
+const resetHistoryButton = document.getElementById('resetHistoryButton') as HTMLButtonElement;
 
 // Load history from localStorage
 function loadHistory(): number[] {
@@ -23,6 +24,15 @@ function loadHistory(): number[] {
 // Save history to localStorage
 function saveHistory(): void {
     localStorage.setItem('stopwatchHistory', JSON.stringify(history));
+}
+
+// Clear history
+function clearHistory(): void {
+    if (confirm('Are you sure you want to clear your history?')) {
+        history = [];
+        localStorage.removeItem('stopwatchHistory');
+        drawChart();
+    }
 }
 
 // Format time to 3 decimal places
@@ -172,8 +182,6 @@ function drawChart(): void {
     ctx.fillStyle = '#141417';
     ctx.fillRect(0, 0, width, height);
     
-    if (history.length === 0) return;
-    
     // Fixed max value at 300ms
     const maxValue = 300;
     
@@ -199,55 +207,57 @@ function drawChart(): void {
     }
     
     // Draw line (connect all points, clamping values over 300ms to top)
-    ctx.strokeStyle = '#0066FF';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    
-    history.forEach((value, index) => {
-        const x = padding + (graphWidth / (MAX_HISTORY - 1)) * index;
-        const clampedValue = Math.min(value, maxValue);
-        const y = padding + graphHeight - (clampedValue / maxValue) * graphHeight;
+    if (history.length > 0) {
+        ctx.strokeStyle = '#0066FF';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
         
-        if (index === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    });
-    
-    ctx.stroke();
-    
-    // Draw points
-    history.forEach((value, index) => {
-        const x = padding + (graphWidth / (MAX_HISTORY - 1)) * index;
-        const clampedValue = Math.min(value, maxValue);
-        const y = padding + graphHeight - (clampedValue / maxValue) * graphHeight;
-        
-        if (value <= maxValue) {
-            // Normal point (filled circle)
-            if (value === 0) {
-                ctx.fillStyle = '#00F7FF'; // Perfect
-                ctx.beginPath();
-                ctx.arc(x, y, 4, 0, Math.PI * 2); // Make it slightly larger
-                ctx.fill();
+        history.forEach((value, index) => {
+            const x = padding + (graphWidth / (MAX_HISTORY - 1)) * index;
+            const clampedValue = Math.min(value, maxValue);
+            const y = padding + graphHeight - (clampedValue / maxValue) * graphHeight;
+            
+            if (index === 0) {
+                ctx.moveTo(x, y);
             } else {
-                ctx.fillStyle = '#0066FF'; // Normal
-                ctx.beginPath();
-                ctx.arc(x, y, 3, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.lineTo(x, y);
             }
-        } else {
-            // Out of range point (dashed circle at top)
-            const topY = padding;
-            ctx.strokeStyle = '#0066FF';
-            ctx.lineWidth = 1;
-            ctx.setLineDash([2, 2]);
-            ctx.beginPath();
-            ctx.arc(x, topY, 3, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
-        }
-    });
+        });
+        
+        ctx.stroke();
+        
+        // Draw points
+        history.forEach((value, index) => {
+            const x = padding + (graphWidth / (MAX_HISTORY - 1)) * index;
+            const clampedValue = Math.min(value, maxValue);
+            const y = padding + graphHeight - (clampedValue / maxValue) * graphHeight;
+            
+            if (value <= maxValue) {
+                // Normal point (filled circle)
+                if (value === 0) {
+                    ctx.fillStyle = '#00F7FF'; // Perfect
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, Math.PI * 2); // Make it slightly larger
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = '#0066FF'; // Normal
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else {
+                // Out of range point (dashed circle at top)
+                const topY = padding;
+                ctx.strokeStyle = '#0066FF';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([2, 2]);
+                ctx.beginPath();
+                ctx.arc(x, topY, 3, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        });
+    }
     
     // Draw target line (0ms)
     ctx.strokeStyle = '#00C853';
@@ -288,4 +298,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     updateDisplay(0);
     drawChart(); // Draw initial chart
+    
+    if (resetHistoryButton) {
+        resetHistoryButton.addEventListener('click', clearHistory);
+    }
 });

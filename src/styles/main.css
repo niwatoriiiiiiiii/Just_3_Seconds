@@ -117,6 +117,29 @@ body {
     max-width: 100%;
 }
 
+.reset-history-container {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+.text-button {
+    background: none;
+    border: none;
+    color: var(--gray);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.text-button:hover {
+    opacity: 1;
+    color: white;
+}
+
 .button {
     background: var(--blue);
     color: white;

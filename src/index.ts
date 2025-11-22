@@ -77,16 +77,10 @@ function updateUserUI(user: User | null) {
                         <button id="manageAccountButton" class="text-button small" style="text-align: left; padding: 0; color: var(--gray); font-size: 12px;">Manage Account</button>
                     </div>
                 </div>
-                <button id="sidebarLogoutButton" class="danger-button">Logout</button>
             </div>
         `;
         
-        const logoutBtn = document.getElementById('sidebarLogoutButton');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', async () => {
-                await logout();
-            });
-        }
+        // Sidebar logout button removed
         
         const manageAccountBtn = document.getElementById('manageAccountButton');
         if (manageAccountBtn) {
@@ -523,6 +517,43 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target === profileModal) {
                 closeProfileModal();
             }
+        });
+    }
+
+    // Modal Logout Button
+    const modalLogoutButton = document.getElementById('modalLogoutButton');
+    if (modalLogoutButton) {
+        modalLogoutButton.addEventListener('click', async (e) => {
+            e.preventDefault(); // Prevent form submission if inside form (it's not, but good practice)
+            if (confirm('Are you sure you want to logout?')) {
+                await logout();
+                closeProfileModal();
+                // Close sidebar if open
+                const sidebar = document.getElementById('menuModal');
+                if (sidebar) {
+                    sidebar.classList.remove('show');
+                    setTimeout(() => {
+                        sidebar.style.display = 'none';
+                    }, 300);
+                }
+            }
+        });
+    }
+
+    // Input Validation
+    if (displayNameInput) {
+        displayNameInput.addEventListener('input', (e) => {
+            const target = e.target as HTMLInputElement;
+            // Allow: a-z, A-Z, 0-9, _, Japanese, Full-width Alphanumeric
+            target.value = target.value.replace(/[^a-zA-Z0-9_\u3040-\u30FF\u4E00-\u9FAF\u30FC\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, '');
+        });
+    }
+
+    if (displayEmailInput) {
+        displayEmailInput.addEventListener('input', (e) => {
+            const target = e.target as HTMLInputElement;
+            // Allow: a-z, A-Z, 0-9, @, ., _, -
+            target.value = target.value.replace(/[^a-zA-Z0-9@._-]/g, '');
         });
     }
     

@@ -212,6 +212,29 @@ body {
     background: rgba(255, 255, 255, 0.1);
 }
 
+#resetHistoryButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(248, 81, 73, 0.1);
+    color: #f85149;
+    border: 1px solid rgba(248, 81, 73, 0.4);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#resetHistoryButton:hover {
+    background: rgba(248, 81, 73, 0.2);
+    border-color: #f85149;
+    transform: translateY(-1px);
+}
+
 .menu-group {
     margin-bottom: 24px;
 }
@@ -642,11 +665,12 @@ body {
     background: var(--blue);
     color: white;
     border: none;
-    padding: 12px 20px;
+    padding: 16px 20px;
     border-radius: 8px;
     cursor: pointer;
     font-family: inherit;
-    font-weight: 700;
+    font-weight: 600;
+    font-size: 15px;
     transition: opacity 0.2s;
     width: 100%;
 }
@@ -685,6 +709,72 @@ body {
 .form-group input:focus {
     outline: none;
     border-color: var(--blue);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Premium Modal Styles */
+.modal-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.modal-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 40px 0;
+}
+
+.logout-section {
+    text-align: center;
+    padding-top: 10px;
+}
+
+.logout-text {
+    color: var(--gray);
+    font-size: 13px;
+    margin-bottom: 20px;
+    opacity: 0.7;
+}
+
+.danger-button {
+    background: rgba(248, 81, 73, 0.1);
+    color: #f85149;
+    border: 1px solid rgba(248, 81, 73, 0.4);
+    padding: 16px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    width: 100%;
+    font-size: 15px;
+}
+
+.danger-button:hover {
+    background: rgba(248, 81, 73, 0.2);
+    border-color: #f85149;
+    transform: translateY(-1px);
+}
+
+.danger-button:active {
+    transform: translateY(0);
+    background: rgba(248, 81, 73, 0.15);
+}
+
+.close-button {
+    background: none;
+    border: none;
+    color: var(--gray);
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.close-button:hover {
+    color: white;
 }
 
 .error-message {

@@ -13,4 +13,4 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - run: echo -e "✅ ビルド検証が成功しました by ${{ github.event.pull_request.auto_merge.enabled_by.login }}\n[${{ github.event.pull_request.title }}](${{ github.event.pull_request.html_url }})"
+      - run: echo -e "✅ ビルド検証が成功しました"

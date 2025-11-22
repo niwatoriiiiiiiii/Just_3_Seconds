@@ -11,8 +11,8 @@ let isRunning: boolean = false;
 let currentUser: User | null = null;
 let isLoginMode: boolean = true;
 
-// History tracking (last 20 attempts)
-const MAX_HISTORY = 20;
+// History tracking (last 50 attempts for rating, display last 20 in graph)
+const MAX_HISTORY = 50;
 let history: number[] = [];
 
 // DOM elements
@@ -84,6 +84,20 @@ async function loadHistoryFromFirestore(): Promise<void> {
     }
 }
 
+// Calculate score for a single record using square root formula
+function calculateRecordScore(errorMs: number): number {
+    if (errorMs > 500) return 0;
+    const score = 0.2 * (1 - Math.sqrt(errorMs / 500));
+    return Math.max(0, score);
+}
+
+// Calculate rating from history (last 50 records)
+function calculateRating(): number {
+    if (history.length === 0) return 0;
+    const totalScore = history.reduce((sum, errorMs) => sum + calculateRecordScore(errorMs), 0);
+    return Math.round(totalScore * 100) / 100; // Round to 2 decimal places
+}
+
 // Update User UI based on auth state
 async function updateUserUI(user: User | null) {
     currentUser = user;
@@ -95,6 +109,7 @@ async function updateUserUI(user: User | null) {
         // Logged in
         const displayName = user.displayName || user.email?.split('@')[0] || 'User';
         const initial = displayName.charAt(0).toUpperCase();
+        const rating = calculateRating();
         
         userSection.innerHTML = `
             <div class="user-profile">
@@ -104,6 +119,10 @@ async function updateUserUI(user: User | null) {
                         <div class="user-name">${displayName}</div>
                         <button id="manageAccountButton" class="text-button small" style="text-align: left; padding: 0; color: var(--gray); font-size: 12px;">Manage Account</button>
                     </div>
+                </div>
+                <div class="user-rating">
+                    <span class="rating-label">Rating</span>
+                    <span class="rating-value">${rating.toFixed(2)}</span>
                 </div>
             </div>
         `;
@@ -349,7 +368,7 @@ function drawChart(): void {
     
     const width = chartCanvas.width;
     const height = chartCanvas.height;
-    const padding = 60; // Increased padding for labels
+    const padding = 60;
     const graphWidth = width - padding * 2;
     const graphHeight = height - padding * 2;
     
@@ -357,7 +376,6 @@ function drawChart(): void {
     ctx.fillStyle = '#141417';
     ctx.fillRect(0, 0, width, height);
     
-    // Fixed max value at 300ms
     const maxValue = 300;
     
     // Draw grid lines
@@ -381,14 +399,16 @@ function drawChart(): void {
         ctx.fillText(`${value}ms`, padding - 10, y + 4);
     }
     
-    // Draw line (connect all points, clamping values over 300ms to top)
-    if (history.length > 0) {
+    // Display only the last 20 records for the graph
+    const displayHistory = history.slice(-20);
+    if (displayHistory.length > 0) {
         ctx.strokeStyle = '#0066FF';
         ctx.lineWidth = 2;
         ctx.beginPath();
         
-        history.forEach((value, index) => {
-            const x = padding + (graphWidth / (MAX_HISTORY - 1)) * index;
+        displayHistory.forEach((value, index) => {
+            const maxDisplayed = Math.min(displayHistory.length, 20);
+            const x = padding + (graphWidth / (maxDisplayed - 1 || 1)) * index;
             const clampedValue = Math.min(value, maxValue);
             const y = padding + graphHeight - (clampedValue / maxValue) * graphHeight;
             
@@ -402,35 +422,32 @@ function drawChart(): void {
         ctx.stroke();
         
         // Draw points
-        history.forEach((value, index) => {
-            const x = padding + (graphWidth / (MAX_HISTORY - 1)) * index;
+        displayHistory.forEach((value, index) => {
+            const maxDisplayed = Math.min(displayHistory.length, 20);
+            const x = padding + (graphWidth / (maxDisplayed - 1 || 1)) * index;
             const clampedValue = Math.min(value, maxValue);
             const y = padding + graphHeight - (clampedValue / maxValue) * graphHeight;
             
-            if (value <= maxValue) {
-                // Normal point (filled circle)
-                if (value === 0) {
-                    ctx.fillStyle = '#00F7FF'; // Perfect
-                    ctx.beginPath();
-                    ctx.arc(x, y, 4, 0, Math.PI * 2); // Make it slightly larger
-                    ctx.fill();
-                } else {
-                    ctx.fillStyle = '#0066FF'; // Normal
-                    ctx.beginPath();
-                    ctx.arc(x, y, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            } else {
-                // Out of range point (dashed circle at top)
-                const topY = padding;
-                ctx.strokeStyle = '#0066FF';
-                ctx.lineWidth = 1;
-                ctx.setLineDash([2, 2]);
-                ctx.beginPath();
-                ctx.arc(x, topY, 3, 0, Math.PI * 2);
+            ctx.beginPath();
+            
+            if (value === 0) {
+                // Perfect score - gold color
+                ctx.fillStyle = '#FFD700';
+                ctx.arc(x, y, 5, 0, Math.PI * 2);
+            } else if (value > maxValue) {
+                // Over 300ms - draw hollow circle at top
+                ctx.strokeStyle = '#FF6B6B';
+                ctx.lineWidth = 2;
+                ctx.arc(x, padding, 4, 0, Math.PI * 2);
                 ctx.stroke();
-                ctx.setLineDash([]);
+                ctx.strokeStyle = '#0066FF';
+                return;
+            } else {
+                ctx.fillStyle = '#0066FF';
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
             }
+            
+            ctx.fill();
         });
     }
     

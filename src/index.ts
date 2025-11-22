@@ -14,6 +14,8 @@ let isLoginMode: boolean = true;
 // History tracking (last 50 attempts for rating, display last 20 in graph)
 const MAX_HISTORY = 50;
 let history: number[] = [];
+let totalGames: number = 0;
+let bestRecord: number | null = null;
 
 // DOM elements
 const displayElement = document.getElementById('stopwatchDisplay') as HTMLDivElement;
@@ -51,10 +53,11 @@ const totalGamesElement = document.getElementById('totalGames') as HTMLSpanEleme
 const bestRecordElement = document.getElementById('bestRecord') as HTMLSpanElement;
 
 // Save history to Firestore
+// Save history to Firestore
 async function saveHistory(): Promise<void> {
     if (currentUser) {
         try {
-            await saveGameHistory(currentUser.uid, history);
+            await saveGameHistory(currentUser.uid, history, totalGames, bestRecord);
         } catch (error) {
             console.error('Failed to save history:', error);
         }
@@ -69,6 +72,8 @@ async function clearHistory(): Promise<void> {
         try {
             await clearGameHistory(currentUser.uid);
             history = [];
+            totalGames = 0;
+            bestRecord = null;
             drawChart();
         } catch (error) {
             console.error('Failed to clear history:', error);
@@ -81,14 +86,27 @@ async function clearHistory(): Promise<void> {
 async function loadHistoryFromFirestore(): Promise<void> {
     if (currentUser) {
         try {
-            history = await loadGameHistory(currentUser.uid);
+            const data = await loadGameHistory(currentUser.uid);
+            if (data) {
+                history = data.history;
+                totalGames = data.totalGames;
+                bestRecord = data.bestRecord;
+            } else {
+                history = [];
+                totalGames = 0;
+                bestRecord = null;
+            }
             drawChart();
         } catch (error) {
             console.error('Failed to load history:', error);
             history = [];
+            totalGames = 0;
+            bestRecord = null;
         }
     } else {
         history = [];
+        totalGames = 0;
+        bestRecord = null;
         drawChart();
     }
 }
@@ -215,15 +233,14 @@ function openProfilePage() {
         if (profileNameLarge) profileNameLarge.textContent = displayName;
         if (profileRatingLarge) profileRatingLarge.textContent = rating.toFixed(2);
         
-        if (totalGamesElement) totalGamesElement.textContent = history.length.toString();
+        if (totalGamesElement) totalGamesElement.textContent = totalGames.toString();
         
-        // Calculate best record (closest to 0)
-        let bestRecord = '-';
-        if (history.length > 0) {
-            const best = Math.min(...history);
-            bestRecord = `${best}ms`;
+        // Display best record
+        let bestRecordText = '-';
+        if (bestRecord !== null) {
+            bestRecordText = `${bestRecord}ms`;
         }
-        if (bestRecordElement) bestRecordElement.textContent = bestRecord;
+        if (bestRecordElement) bestRecordElement.textContent = bestRecordText;
 
         profilePage.style.display = 'flex';
         profilePage.offsetHeight; // Force reflow
@@ -377,6 +394,12 @@ function resetTimer(): void {
 function checkResult(): void {
     const targetTime = 3000; // 3 seconds in milliseconds
     const difference = Math.abs(elapsedTime - targetTime);
+    
+    // Update stats
+    totalGames++;
+    if (bestRecord === null || difference < bestRecord) {
+        bestRecord = difference;
+    }
     
     // Add to history
     history.push(difference);

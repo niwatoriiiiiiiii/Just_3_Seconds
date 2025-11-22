@@ -811,6 +811,29 @@ body {
     min-height: 20px;
 }
 
+/* ===== Auth Styles Restored ===== */
+.auth-switch {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--gray);
+}
+
+.text-button {
+    background: none;
+    border: none;
+    color: var(--blue);
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0 5px;
+    font-size: inherit;
+}
+
+.text-button:hover {
+    text-decoration: underline;
+}
+
 /* ===== Profile Page ===== */
 .profile-page {
     display: none;

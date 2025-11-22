@@ -811,9 +811,141 @@ body {
     min-height: 20px;
 }
 
-.auth-switch {
-    margin-top: 20px;
+/* ===== Profile Page ===== */
+.profile-page {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--black);
+    z-index: 2000;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.profile-page.show {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+}
+
+.profile-header {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--light-gray);
+}
+
+.profile-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3);
+}
+
+.profile-name {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 40px;
     text-align: center;
-    font-size: 14px;
+}
+
+.profile-rating-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 30px 60px;
+    border-radius: 16px;
+    margin-bottom: 40px;
+    width: 100%;
+}
+
+.profile-rating-label {
     color: var(--gray);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.profile-rating-value {
+    color: #e6edf3;
+    font-size: 64px;
+    font-weight: 400;
+    font-family: 'Orbitron', monospace;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-bottom: 40px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-label {
+    color: var(--gray);
+    font-size: 12px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'Orbitron', monospace;
+}
+
+.profile-actions {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }

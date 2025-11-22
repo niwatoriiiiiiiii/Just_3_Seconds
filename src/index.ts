@@ -41,6 +41,15 @@ const displayEmailInput = document.getElementById('displayEmail') as HTMLInputEl
 const profileError = document.getElementById('profileError') as HTMLDivElement;
 const closeProfileButton = document.getElementById('closeProfileButton') as HTMLButtonElement;
 
+// Profile Page DOM elements
+const profilePage = document.getElementById('profilePage') as HTMLDivElement;
+const backToGameButton = document.getElementById('backToGameButton') as HTMLButtonElement;
+const profileAvatarLarge = document.getElementById('profileAvatarLarge') as HTMLDivElement;
+const profileNameLarge = document.getElementById('profileNameLarge') as HTMLHeadingElement;
+const profileRatingLarge = document.getElementById('profileRatingLarge') as HTMLSpanElement;
+const totalGamesElement = document.getElementById('totalGames') as HTMLSpanElement;
+const bestRecordElement = document.getElementById('bestRecord') as HTMLSpanElement;
+
 // Save history to Firestore
 async function saveHistory(): Promise<void> {
     if (currentUser) {
@@ -143,11 +152,39 @@ async function updateUserUI(user: User | null) {
                 }
             });
         }
+        
+        // Show profile link in sidebar
+        const profileLinkGroup = document.getElementById('profileLinkGroup');
+        if (profileLinkGroup) {
+            profileLinkGroup.style.display = 'block';
+        }
+        
+        const sidebarProfileButton = document.getElementById('sidebarProfileButton');
+        if (sidebarProfileButton) {
+            sidebarProfileButton.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openProfilePage();
+                // Close sidebar
+                const sidebar = document.getElementById('menuModal');
+                if (sidebar) {
+                    sidebar.classList.remove('show');
+                    setTimeout(() => {
+                        sidebar.style.display = 'none';
+                    }, 300);
+                }
+            };
+        }
     } else {
         // Logged out
         userSection.innerHTML = `
             <button id="sidebarLoginButton" class="action-button">Login / Sign Up</button>
         `;
+        
+        const profileLinkGroup = document.getElementById('profileLinkGroup');
+        if (profileLinkGroup) {
+            profileLinkGroup.style.display = 'none';
+        }
         
         const loginBtn = document.getElementById('sidebarLoginButton');
         if (loginBtn) {
@@ -163,6 +200,43 @@ async function updateUserUI(user: User | null) {
                 }
             });
         }
+    }
+}
+
+// Profile Page Logic
+function openProfilePage() {
+    if (profilePage && currentUser) {
+        // Update data
+        const displayName = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
+        const initial = displayName.charAt(0).toUpperCase();
+        const rating = calculateRating();
+        
+        if (profileAvatarLarge) profileAvatarLarge.textContent = initial;
+        if (profileNameLarge) profileNameLarge.textContent = displayName;
+        if (profileRatingLarge) profileRatingLarge.textContent = rating.toFixed(2);
+        
+        if (totalGamesElement) totalGamesElement.textContent = history.length.toString();
+        
+        // Calculate best record (closest to 0)
+        let bestRecord = '-';
+        if (history.length > 0) {
+            const best = Math.min(...history);
+            bestRecord = `${best}ms`;
+        }
+        if (bestRecordElement) bestRecordElement.textContent = bestRecord;
+
+        profilePage.style.display = 'flex';
+        profilePage.offsetHeight; // Force reflow
+        profilePage.classList.add('show');
+    }
+}
+
+function closeProfilePage() {
+    if (profilePage) {
+        profilePage.classList.remove('show');
+        setTimeout(() => {
+            profilePage.style.display = 'none';
+        }, 300);
     }
 }
 
@@ -662,5 +736,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 300);
             }
         });
+    }
+
+    // Profile Page Event Listeners
+    if (backToGameButton) {
+        backToGameButton.addEventListener('click', closeProfilePage);
     }
 });

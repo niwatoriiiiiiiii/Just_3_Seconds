@@ -300,6 +300,51 @@ document.addEventListener('DOMContentLoaded', () => {
     drawChart(); // Draw initial chart
     
     if (resetHistoryButton) {
-        resetHistoryButton.addEventListener('click', clearHistory);
+        resetHistoryButton.addEventListener('click', () => {
+            clearHistory();
+            // Close sidebar after clearing
+            const sidebar = document.getElementById('menuModal');
+            if (sidebar) {
+                sidebar.classList.remove('show');
+                setTimeout(() => {
+                    sidebar.style.display = 'none';
+                }, 300);
+            }
+        });
+    }
+    
+    // Sidebar Menu Logic
+    const menuButton = document.getElementById('menuButton');
+    const closeMenuButton = document.getElementById('closeMenuButton');
+    const menuSidebar = document.getElementById('menuModal');
+    
+    if (menuButton && menuSidebar) {
+        menuButton.addEventListener('click', () => {
+            menuSidebar.style.display = 'block';
+            // Force reflow
+            menuSidebar.offsetHeight;
+            menuSidebar.classList.add('show');
+        });
+    }
+    
+    if (closeMenuButton && menuSidebar) {
+        closeMenuButton.addEventListener('click', () => {
+            menuSidebar.classList.remove('show');
+            setTimeout(() => {
+                menuSidebar.style.display = 'none';
+            }, 300);
+        });
+    }
+    
+    // Close sidebar when clicking outside
+    if (menuSidebar) {
+        menuSidebar.addEventListener('click', (e) => {
+            if (e.target === menuSidebar) {
+                menuSidebar.classList.remove('show');
+                setTimeout(() => {
+                    menuSidebar.style.display = 'none';
+                }, 300);
+            }
+        });
     }
 });

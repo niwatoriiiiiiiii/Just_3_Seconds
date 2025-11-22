@@ -106,6 +106,17 @@ body {
     letter-spacing: 1px;
 }
 
+.chart-container {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+#historyChart {
+    border-radius: 8px;
+    max-width: 100%;
+}
+
 .button {
     background: var(--blue);
     color: white;

@@ -35,6 +35,9 @@ body {
     background: var(--black);
     border-bottom: 1px solid var(--border);
     z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .logo {

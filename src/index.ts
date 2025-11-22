@@ -300,51 +300,6 @@ document.addEventListener('DOMContentLoaded', () => {
     drawChart(); // Draw initial chart
     
     if (resetHistoryButton) {
-        resetHistoryButton.addEventListener('click', () => {
-            clearHistory();
-            // Close modal after clearing
-            const modal = document.getElementById('menuModal');
-            if (modal) {
-                modal.classList.remove('show');
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                }, 300);
-            }
-        });
-    }
-    
-    // Menu Modal Logic
-    const menuButton = document.getElementById('menuButton');
-    const closeMenuButton = document.getElementById('closeMenuButton');
-    const menuModal = document.getElementById('menuModal');
-    
-    if (menuButton && menuModal) {
-        menuButton.addEventListener('click', () => {
-            menuModal.style.display = 'flex';
-            // Force reflow
-            menuModal.offsetHeight;
-            menuModal.classList.add('show');
-        });
-    }
-    
-    if (closeMenuButton && menuModal) {
-        closeMenuButton.addEventListener('click', () => {
-            menuModal.classList.remove('show');
-            setTimeout(() => {
-                menuModal.style.display = 'none';
-            }, 300);
-        });
-    }
-    
-    // Close modal when clicking outside
-    if (menuModal) {
-        menuModal.addEventListener('click', (e) => {
-            if (e.target === menuModal) {
-                menuModal.classList.remove('show');
-                setTimeout(() => {
-                    menuModal.style.display = 'none';
-                }, 300);
-            }
-        });
+        resetHistoryButton.addEventListener('click', clearHistory);
     }
 });

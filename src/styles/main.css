@@ -1,0 +1,246 @@
+/* ===== Reset ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ===== Variables ===== */
+:root {
+    --blue: #0066FF;
+    --black: #141417;
+    --gray: #666666;
+    --light-gray: #999999;
+    --border: #21262d;
+}
+
+/* ===== Base ===== */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--black);
+    color: white;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Header ===== */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 25px 40px;
+    background: var(--black);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+}
+
+.logo {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--light-gray);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+/* ===== Hero Section ===== */
+.hero {
+    padding: 150px 40px 100px;
+    text-align: center;
+}
+
+.hero-title {
+    font-size: 64px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    letter-spacing: -2px;
+}
+
+.hero-subtitle {
+    font-size: 20px;
+    color: var(--gray);
+    font-weight: 400;
+}
+
+/* ===== Game Section ===== */
+.game-section {
+    padding: 80px 40px;
+    text-align: center;
+}
+
+.stopwatch {
+    margin-bottom: 50px;
+}
+
+.display {
+    font-size: 96px;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -3px;
+    color: white;
+    font-family: 'Orbitron', monospace;
+}
+
+.button {
+    background: var(--blue);
+    color: white;
+    border: none;
+    padding: 18px 50px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.2s ease;
+}
+
+.button:hover:not(:disabled) {
+    opacity: 0.9;
+}
+
+.button:active:not(:disabled) {
+    opacity: 0.8;
+}
+
+.button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* ===== About Section ===== */
+.about-section {
+    padding: 80px 40px;
+}
+
+.about-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.section-title {
+    font-size: 40px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 60px;
+    letter-spacing: -1px;
+}
+
+.steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 50px;
+}
+
+.step {
+    text-align: center;
+}
+
+.step-number {
+    font-size: 16px;
+    color: var(--gray);
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+}
+
+.step h3 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.step p {
+    font-size: 15px;
+    color: var(--gray);
+    line-height: 1.6;
+}
+
+/* ===== Challenge Section ===== */
+.challenge-section {
+    padding: 80px 40px;
+    text-align: center;
+}
+
+.challenge-text {
+    font-size: 22px;
+    color: var(--gray);
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* ===== Footer ===== */
+.footer {
+    padding: 50px 40px;
+    text-align: center;
+    color: var(--gray);
+    font-size: 14px;
+    border-top: 1px solid var(--border);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .hero {
+        padding: 120px 40px 80px;
+    }
+
+    .hero-title {
+        font-size: 44px;
+    }
+
+    .hero-subtitle {
+        font-size: 18px;
+    }
+
+    .display {
+        font-size: 72px;
+    }
+
+    .section-title {
+        font-size: 32px;
+        margin-bottom: 50px;
+    }
+
+    .steps {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .challenge-text {
+        font-size: 20px;
+    }
+
+    .game-section,
+    .about-section,
+    .challenge-section {
+        padding: 60px 30px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        padding: 100px 20px 60px;
+    }
+
+    .hero-title {
+        font-size: 36px;
+    }
+
+    .display {
+        font-size: 56px;
+    }
+
+    .button {
+        padding: 16px 40px;
+        font-size: 15px;
+    }
+
+    .section-title {
+        font-size: 28px;
+    }
+
+    .game-section,
+    .about-section,
+    .challenge-section {
+        padding: 50px 20px;
+    }
+}

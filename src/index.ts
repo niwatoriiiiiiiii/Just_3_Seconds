@@ -431,12 +431,12 @@ function drawChart(): void {
             ctx.beginPath();
             
             if (value === 0) {
-                // Perfect score - gold color
-                ctx.fillStyle = '#FFD700';
+                // Perfect score - cyan color
+                ctx.fillStyle = '#00F7FF';
                 ctx.arc(x, y, 5, 0, Math.PI * 2);
             } else if (value > maxValue) {
                 // Over 300ms - draw hollow circle at top
-                ctx.strokeStyle = '#FF6B6B';
+                ctx.strokeStyle = '#979797';
                 ctx.lineWidth = 2;
                 ctx.arc(x, padding, 4, 0, Math.PI * 2);
                 ctx.stroke();

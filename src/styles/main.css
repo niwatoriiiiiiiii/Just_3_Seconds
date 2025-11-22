@@ -12,6 +12,9 @@
     --gray: #666666;
     --light-gray: #999999;
     --border: #21262d;
+    --green: #00C853;
+    --orange: #FF9800;
+    --red: #FF5252;
 }
 
 /* ===== Base ===== */
@@ -70,6 +73,7 @@ body {
 
 .stopwatch {
     margin-bottom: 50px;
+    padding: 40px 0;
 }
 
 .display {
@@ -79,6 +83,27 @@ body {
     letter-spacing: -3px;
     color: white;
     font-family: 'Orbitron', monospace;
+    transition: transform 0.2s ease, opacity 1s ease;
+}
+
+.display.fade-out {
+    opacity: 0;
+}
+
+.display:hover {
+    transform: scale(1.05);
+}
+
+.display:active {
+    transform: scale(0.95);
+}
+
+.instruction {
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .button {
@@ -177,6 +202,93 @@ body {
     border-top: 1px solid var(--border);
 }
 
+/* ===== Result Overlay ===== */
+.result-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.result-content {
+    text-align: center;
+    padding: 60px 40px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    max-width: 500px;
+    animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.result-message {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 30px;
+    line-height: 1.4;
+}
+
+.result-content.perfect .result-message {
+    color: var(--green);
+}
+
+.result-content.excellent .result-message {
+    color: var(--blue);
+}
+
+.result-content.good .result-message {
+    color: var(--orange);
+}
+
+.result-content.okay .result-message,
+.result-content.miss .result-message {
+    color: var(--light-gray);
+}
+
+.result-button {
+    background: var(--blue);
+    color: white;
+    border: none;
+    padding: 16px 40px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.2s ease;
+}
+
+.result-button:hover {
+    opacity: 0.9;
+}
+
+.result-button:active {
+    opacity: 0.8;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
     .hero {
@@ -214,6 +326,10 @@ body {
     .challenge-section {
         padding: 60px 30px;
     }
+
+    .result-message {
+        font-size: 24px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -242,5 +358,13 @@ body {
     .about-section,
     .challenge-section {
         padding: 50px 20px;
+    }
+
+    .result-content {
+        padding: 40px 30px;
+    }
+
+    .result-message {
+        font-size: 20px;
     }
 }

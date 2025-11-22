@@ -846,11 +846,13 @@ body {
     z-index: 2000;
     flex-direction: column;
     overflow-y: auto;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .profile-page.show {
     display: flex;
-    animation: fadeIn 0.3s ease;
+    opacity: 1;
 }
 
 .profile-header {
@@ -949,15 +951,16 @@ body {
 
 .stat-label {
     color: var(--gray);
-    font-size: 12px;
+    font-size: 10px;
     margin-bottom: 5px;
     text-transform: uppercase;
     letter-spacing: 1px;
+    font-family: 'Orbitron', monospace;
 }
 
 .stat-value {
     font-size: 20px;
-    font-weight: 700;
+    font-weight: 400;
     font-family: 'Orbitron', monospace;
 }
 

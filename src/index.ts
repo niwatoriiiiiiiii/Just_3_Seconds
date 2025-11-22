@@ -1,5 +1,6 @@
 import './styles/main.css';
 import { login, signup, logout, updateUserProfile, updateUserEmail, subscribeToAuthChanges } from './auth';
+import { saveGameHistory, loadGameHistory, clearGameHistory } from './firestore';
 import { User } from 'firebase/auth';
 
 // Game state
@@ -12,7 +13,7 @@ let isLoginMode: boolean = true;
 
 // History tracking (last 20 attempts)
 const MAX_HISTORY = 20;
-let history: number[] = loadHistory();
+let history: number[] = [];
 
 // DOM elements
 const displayElement = document.getElementById('stopwatchDisplay') as HTMLDivElement;
@@ -40,29 +41,56 @@ const displayEmailInput = document.getElementById('displayEmail') as HTMLInputEl
 const profileError = document.getElementById('profileError') as HTMLDivElement;
 const closeProfileButton = document.getElementById('closeProfileButton') as HTMLButtonElement;
 
-// Load history from localStorage
-function loadHistory(): number[] {
-    const saved = localStorage.getItem('stopwatchHistory');
-    return saved ? JSON.parse(saved) : [];
+// Save history to Firestore
+async function saveHistory(): Promise<void> {
+    if (currentUser) {
+        try {
+            await saveGameHistory(currentUser.uid, history);
+        } catch (error) {
+            console.error('Failed to save history:', error);
+        }
+    }
 }
 
-// Save history to localStorage
-function saveHistory(): void {
-    localStorage.setItem('stopwatchHistory', JSON.stringify(history));
-}
-
-// Clear history
-function clearHistory(): void {
+// Clear history from Firestore
+async function clearHistory(): Promise<void> {
+    if (!currentUser) return;
+    
     if (confirm('Are you sure you want to clear your history?')) {
+        try {
+            await clearGameHistory(currentUser.uid);
+            history = [];
+            drawChart();
+        } catch (error) {
+            console.error('Failed to clear history:', error);
+            alert('Failed to clear history. Please try again.');
+        }
+    }
+}
+
+// Load history from Firestore
+async function loadHistoryFromFirestore(): Promise<void> {
+    if (currentUser) {
+        try {
+            history = await loadGameHistory(currentUser.uid);
+            drawChart();
+        } catch (error) {
+            console.error('Failed to load history:', error);
+            history = [];
+        }
+    } else {
         history = [];
-        localStorage.removeItem('stopwatchHistory');
         drawChart();
     }
 }
 
 // Update User UI based on auth state
-function updateUserUI(user: User | null) {
+async function updateUserUI(user: User | null) {
     currentUser = user;
+    
+    // Load history when user changes
+    await loadHistoryFromFirestore();
+    
     if (user) {
         // Logged in
         const displayName = user.displayName || user.email?.split('@')[0] || 'User';

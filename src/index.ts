@@ -1,10 +1,14 @@
 import './styles/main.css';
+import { login, signup, logout, updateUserProfile, updateUserEmail, subscribeToAuthChanges } from './auth';
+import { User } from 'firebase/auth';
 
 // Game state
 let startTime: number = 0;
 let elapsedTime: number = 0;
 let timerInterval: number | null = null;
 let isRunning: boolean = false;
+let currentUser: User | null = null;
+let isLoginMode: boolean = true;
 
 // History tracking (last 20 attempts)
 const MAX_HISTORY = 20;
@@ -14,6 +18,27 @@ let history: number[] = loadHistory();
 const displayElement = document.getElementById('stopwatchDisplay') as HTMLDivElement;
 const chartCanvas = document.getElementById('historyChart') as HTMLCanvasElement;
 const resetHistoryButton = document.getElementById('resetHistoryButton') as HTMLButtonElement;
+
+// Auth DOM elements
+const userSection = document.getElementById('userSection') as HTMLDivElement;
+const authModal = document.getElementById('authModal') as HTMLDivElement;
+const authForm = document.getElementById('authForm') as HTMLFormElement;
+const emailInput = document.getElementById('email') as HTMLInputElement;
+const passwordInput = document.getElementById('password') as HTMLInputElement;
+const authError = document.getElementById('authError') as HTMLDivElement;
+const authSubmitButton = document.getElementById('authSubmitButton') as HTMLButtonElement;
+const authSwitchButton = document.getElementById('authSwitchButton') as HTMLButtonElement;
+const authSwitchText = document.getElementById('authSwitchText') as HTMLSpanElement;
+const authModalTitle = document.getElementById('authModalTitle') as HTMLHeadingElement;
+const closeAuthButton = document.getElementById('closeAuthButton') as HTMLButtonElement;
+
+// Profile DOM elements
+const profileModal = document.getElementById('profileModal') as HTMLDivElement;
+const profileForm = document.getElementById('profileForm') as HTMLFormElement;
+const displayNameInput = document.getElementById('displayName') as HTMLInputElement;
+const displayEmailInput = document.getElementById('displayEmail') as HTMLInputElement;
+const profileError = document.getElementById('profileError') as HTMLDivElement;
+const closeProfileButton = document.getElementById('closeProfileButton') as HTMLButtonElement;
 
 // Load history from localStorage
 function loadHistory(): number[] {
@@ -32,6 +57,134 @@ function clearHistory(): void {
         history = [];
         localStorage.removeItem('stopwatchHistory');
         drawChart();
+    }
+}
+
+// Update User UI based on auth state
+function updateUserUI(user: User | null) {
+    currentUser = user;
+    if (user) {
+        // Logged in
+        const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+        const initial = displayName.charAt(0).toUpperCase();
+        
+        userSection.innerHTML = `
+            <div class="user-profile">
+                <div class="user-info">
+                    <div class="user-avatar">${initial}</div>
+                    <div class="user-details">
+                        <div class="user-name">${displayName}</div>
+                        <button id="manageAccountButton" class="text-button small" style="text-align: left; padding: 0; color: var(--gray); font-size: 12px;">Manage Account</button>
+                    </div>
+                </div>
+                <button id="sidebarLogoutButton" class="danger-button">Logout</button>
+            </div>
+        `;
+        
+        const logoutBtn = document.getElementById('sidebarLogoutButton');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                await logout();
+            });
+        }
+        
+        const manageAccountBtn = document.getElementById('manageAccountButton');
+        if (manageAccountBtn) {
+            manageAccountBtn.addEventListener('click', () => {
+                openProfileModal();
+                // Close sidebar
+                const sidebar = document.getElementById('menuModal');
+                if (sidebar) {
+                    sidebar.classList.remove('show');
+                    setTimeout(() => {
+                        sidebar.style.display = 'none';
+                    }, 300);
+                }
+            });
+        }
+    } else {
+        // Logged out
+        userSection.innerHTML = `
+            <button id="sidebarLoginButton" class="action-button">Login / Sign Up</button>
+        `;
+        
+        const loginBtn = document.getElementById('sidebarLoginButton');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => {
+                openAuthModal();
+                // Close sidebar
+                const sidebar = document.getElementById('menuModal');
+                if (sidebar) {
+                    sidebar.classList.remove('show');
+                    setTimeout(() => {
+                        sidebar.style.display = 'none';
+                    }, 300);
+                }
+            });
+        }
+    }
+}
+
+// Auth Modal Logic
+function openAuthModal() {
+    if (authModal) {
+        authModal.style.display = 'flex';
+        authModal.offsetHeight; // Force reflow
+        authModal.classList.add('show');
+        resetAuthForm();
+    }
+}
+
+function closeAuthModal() {
+    if (authModal) {
+        authModal.classList.remove('show');
+        setTimeout(() => {
+            authModal.style.display = 'none';
+        }, 300);
+    }
+}
+
+function resetAuthForm() {
+    if (authForm) authForm.reset();
+    if (authError) authError.textContent = '';
+    isLoginMode = true;
+    updateAuthModalState();
+}
+
+function updateAuthModalState() {
+    if (isLoginMode) {
+        authModalTitle.textContent = 'Login';
+        authSubmitButton.textContent = 'Login';
+        authSwitchText.textContent = "Don't have an account?";
+        authSwitchButton.textContent = 'Sign Up';
+    } else {
+        authModalTitle.textContent = 'Create Account';
+        authSubmitButton.textContent = 'Sign Up';
+        authSwitchText.textContent = "Already have an account?";
+        authSwitchButton.textContent = 'Login';
+    }
+}
+
+// Profile Modal Logic
+function openProfileModal() {
+    if (profileModal) {
+        profileModal.style.display = 'flex';
+        profileModal.offsetHeight; // Force reflow
+        profileModal.classList.add('show');
+        if (currentUser) {
+            displayNameInput.value = currentUser.displayName || '';
+            displayEmailInput.value = currentUser.email || '';
+        }
+        if (profileError) profileError.textContent = '';
+    }
+}
+
+function closeProfileModal() {
+    if (profileModal) {
+        profileModal.classList.remove('show');
+        setTimeout(() => {
+            profileModal.style.display = 'none';
+        }, 300);
     }
 }
 
@@ -276,6 +429,103 @@ function drawChart(): void {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Just 3 Seconds - Game Initialized');
     
+    // Subscribe to auth changes
+    subscribeToAuthChanges((user) => {
+        updateUserUI(user);
+    });
+    
+    // Auth Event Listeners
+    if (authForm) {
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            
+            if (authError) authError.textContent = 'Processing...';
+            
+            let result;
+            if (isLoginMode) {
+                result = await login(email, password);
+            } else {
+                result = await signup(email, password);
+            }
+            
+            if (result.error) {
+                if (authError) authError.textContent = result.error;
+            } else {
+                closeAuthModal();
+            }
+        });
+    }
+    
+    if (authSwitchButton) {
+        authSwitchButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            isLoginMode = !isLoginMode;
+            updateAuthModalState();
+        });
+    }
+    
+    if (closeAuthButton) {
+        closeAuthButton.addEventListener('click', closeAuthModal);
+    }
+    
+    // Close auth modal when clicking outside
+    if (authModal) {
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                closeAuthModal();
+            }
+        });
+    }
+    
+    // Profile Event Listeners
+    if (profileForm) {
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newName = displayNameInput.value;
+            const newEmail = displayEmailInput.value;
+            
+            if (profileError) profileError.textContent = 'Saving...';
+            
+            // Update profile name
+            const nameResult = await updateUserProfile(newName);
+            if (nameResult.error) {
+                if (profileError) profileError.textContent = nameResult.error;
+                return;
+            }
+
+            // Update email if changed
+            if (currentUser && newEmail !== currentUser.email) {
+                const emailResult = await updateUserEmail(newEmail);
+                if (emailResult.error) {
+                    if (profileError) profileError.textContent = "Name updated, but email update failed: " + emailResult.error;
+                    return;
+                } else {
+                    alert(`Verification email sent to ${newEmail}.\nPlease check your inbox and click the link to verify your new email address.\nThe change will take effect after verification.`);
+                }
+            }
+            
+            closeProfileModal();
+            // Force UI update
+            if (currentUser) {
+                window.location.reload();
+            }
+        });
+    }
+    
+    if (closeProfileButton) {
+        closeProfileButton.addEventListener('click', closeProfileModal);
+    }
+    
+    if (profileModal) {
+        profileModal.addEventListener('click', (e) => {
+            if (e.target === profileModal) {
+                closeProfileModal();
+            }
+        });
+    }
+    
     if (displayElement) {
         // Mouse events
         displayElement.addEventListener('mousedown', startTimer);
@@ -315,7 +565,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Sidebar Menu Logic
     const menuButton = document.getElementById('menuButton');
-    const closeMenuButton = document.getElementById('closeMenuButton');
     const menuSidebar = document.getElementById('menuModal');
     
     if (menuButton && menuSidebar) {
@@ -324,15 +573,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Force reflow
             menuSidebar.offsetHeight;
             menuSidebar.classList.add('show');
-        });
-    }
-    
-    if (closeMenuButton && menuSidebar) {
-        closeMenuButton.addEventListener('click', () => {
-            menuSidebar.classList.remove('show');
-            setTimeout(() => {
-                menuSidebar.style.display = 'none';
-            }, 300);
         });
     }
     

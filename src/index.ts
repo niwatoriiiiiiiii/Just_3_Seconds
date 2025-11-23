@@ -1,5 +1,5 @@
 import './styles/main.css';
-import { login, signup, logout, updateUserProfile, updateUserEmail, subscribeToAuthChanges } from './auth';
+import { login, signup, logout, updateUserProfile, updateUserEmail, updateUserPassword, sendPasswordResetEmail, subscribeToAuthChanges } from './auth';
 import { saveGameHistory, loadGameHistory, clearGameHistory, saveDailyRating, loadDailyRating, DailyRating } from './firestore';
 import { getDominantColor } from './utils';
 import { User } from 'firebase/auth';
@@ -59,6 +59,17 @@ const avatarPreview = document.getElementById('avatarPreview') as HTMLDivElement
 const avatarInput = document.getElementById('avatarInput') as HTMLInputElement;
 const selectAvatarButton = document.getElementById('selectAvatarButton') as HTMLButtonElement;
 const avatarError = document.getElementById('avatarError') as HTMLDivElement;
+const forgotPasswordButton = document.getElementById('forgotPasswordButton') as HTMLButtonElement;
+const passwordChangeForm = document.getElementById('passwordChangeForm') as HTMLFormElement;
+const newPasswordInput = document.getElementById('newPassword') as HTMLInputElement;
+const confirmPasswordInput = document.getElementById('confirmPassword') as HTMLInputElement;
+const passwordError = document.getElementById('passwordError') as HTMLDivElement;
+const passwordResetModal = document.getElementById('passwordResetModal') as HTMLDivElement;
+const passwordResetForm = document.getElementById('passwordResetForm') as HTMLFormElement;
+const resetEmailInput = document.getElementById('resetEmail') as HTMLInputElement;
+const resetError = document.getElementById('resetError') as HTMLDivElement;
+const closePasswordResetButton = document.getElementById('closePasswordResetButton') as HTMLButtonElement;
+const backToLoginButton = document.getElementById('backToLoginButton') as HTMLButtonElement;
 
 
 // Save history to Firestore
@@ -349,11 +360,13 @@ function updateAuthModalState() {
         authSubmitButton.textContent = 'Login';
         authSwitchText.textContent = "Don't have an account?";
         authSwitchButton.textContent = 'Sign Up';
+        if (forgotPasswordButton) forgotPasswordButton.style.display = 'block';
     } else {
         authModalTitle.textContent = 'Create Account';
         authSubmitButton.textContent = 'Sign Up';
         authSwitchText.textContent = "Already have an account?";
         authSwitchButton.textContent = 'Login';
+        if (forgotPasswordButton) forgotPasswordButton.style.display = 'none';
     }
 }
 
@@ -407,6 +420,28 @@ function closeProfileModal() {
         profileModal.classList.remove('show');
         setTimeout(() => {
             profileModal.style.display = 'none';
+        }, 300);
+    }
+}
+
+// Password Reset Modal Logic
+function openPasswordResetModal() {
+    if (passwordResetModal) {
+        closeAuthModal();
+        if (authError) authError.textContent = '';
+        passwordResetModal.style.display = 'flex';
+        passwordResetModal.offsetHeight;
+        passwordResetModal.classList.add('show');
+        if (resetError) resetError.textContent = '';
+        if (resetEmailInput) resetEmailInput.value = '';
+    }
+}
+
+function closePasswordResetModal() {
+    if (passwordResetModal) {
+        passwordResetModal.classList.remove('show');
+        setTimeout(() => {
+            passwordResetModal.style.display = 'none';
         }, 300);
     }
 }
@@ -782,6 +817,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    if (forgotPasswordButton) {
+        forgotPasswordButton.addEventListener('click', async () => {
+            const email = emailInput.value;
+            if (!email) {
+                if (authError) authError.textContent = 'Please enter your email address first.';
+                return;
+            }
+            
+            if (authError) authError.textContent = 'Sending...';
+            const result = await sendPasswordResetEmail(email);
+            
+            if (result.error) {
+                if (authError) authError.textContent = result.error;
+            } else {
+                if (authError) {
+                    authError.style.color = '#00C853';
+                    authError.textContent = 'Password reset email sent! Check your inbox.';
+                    setTimeout(() => {
+                        authError.style.color = '#FF5252';
+                        authError.textContent = '';
+                    }, 3000);
+                }
+            }
+        });
+    }
+    
     if (closeAuthButton) {
         closeAuthButton.addEventListener('click', closeAuthModal);
     }
@@ -791,6 +852,57 @@ document.addEventListener('DOMContentLoaded', () => {
         authModal.addEventListener('click', (e) => {
             if (e.target === authModal) {
                 closeAuthModal();
+            }
+        });
+    }
+    
+    if (forgotPasswordButton) {
+        forgotPasswordButton.addEventListener('click', () => {
+            openPasswordResetModal();
+        });
+    }
+    
+    // Password Reset Event Listeners
+    if (passwordResetForm) {
+        passwordResetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = resetEmailInput.value;
+            
+            if (resetError) resetError.textContent = 'Sending...';
+            const result = await sendPasswordResetEmail(email);
+            
+            if (result.error) {
+                if (resetError) resetError.textContent = result.error;
+            } else {
+                if (resetError) {
+                    resetError.style.color = '#00C853';
+                    resetError.textContent = 'Password reset email sent! Check your inbox.';
+                    setTimeout(() => {
+                        resetError.style.color = '#FF5252';
+                        closePasswordResetModal();
+                    }, 2000);
+                }
+            }
+        });
+    }
+    
+    if (closePasswordResetButton) {
+        closePasswordResetButton.addEventListener('click', closePasswordResetModal);
+    }
+    
+    if (backToLoginButton) {
+        backToLoginButton.addEventListener('click', () => {
+            closePasswordResetModal();
+            isLoginMode = true;
+            updateAuthModalState();
+            openAuthModal();
+        });
+    }
+    
+    if (passwordResetModal) {
+        passwordResetModal.addEventListener('click', (e) => {
+            if (e.target === passwordResetModal) {
+                closePasswordResetModal();
             }
         });
     }
@@ -826,6 +938,51 @@ document.addEventListener('DOMContentLoaded', () => {
             // Force UI update
             if (currentUser) {
                 window.location.reload();
+            }
+        });
+    }
+    
+    // Password Change Event Listener
+    if (passwordChangeForm) {
+        passwordChangeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = newPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            if (passwordError) passwordError.textContent = '';
+            
+            if (!newPassword || !confirmPassword) {
+                if (passwordError) passwordError.textContent = 'Please fill in all fields.';
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                if (passwordError) passwordError.textContent = 'Passwords do not match.';
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                if (passwordError) passwordError.textContent = 'Password must be at least 6 characters.';
+                return;
+            }
+            
+            if (passwordError) passwordError.textContent = 'Updating password...';
+            
+            const result = await updateUserPassword(newPassword);
+            
+            if (result.error) {
+                if (passwordError) passwordError.textContent = result.error;
+            } else {
+                if (passwordError) {
+                    passwordError.style.color = '#00C853';
+                    passwordError.textContent = 'Password changed successfully!';
+                    setTimeout(() => {
+                        passwordError.style.color = '#FF5252';
+                        passwordError.textContent = '';
+                        newPasswordInput.value = '';
+                        confirmPasswordInput.value = '';
+                    }, 2000);
+                }
             }
         });
     }

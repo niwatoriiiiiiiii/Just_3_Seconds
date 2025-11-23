@@ -821,6 +821,26 @@ body {
     color: var(--gray);
 }
 
+.forgot-password-link {
+    margin-top: 20px;
+    margin-bottom: 0;
+    text-align: center;
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+}
+
+.password-change-section {
+    margin-top: 20px;
+}
+
+.password-change-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--light-gray);
+    margin-bottom: 20px;
+}
+
 .text-button {
     background: none;
     border: none;

@@ -12,6 +12,7 @@ export interface GameStats {
     totalGames: number;
     bestRecord: number | null;
     rating: number;
+    perfectCount: number;
     unlockedAchievementIds: string[];
 }
 
@@ -73,7 +74,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         name: 'Nice!',
         description: 'Get a 0ms record for the first time',
         isSecret: false,
-        checkUnlock: (stats) => stats.history.filter(r => r === 0).length >= 1
+        checkUnlock: (stats) => stats.perfectCount >= 1
     },
     {
         id: '3sec_2',
@@ -81,7 +82,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         name: 'Fluke?',
         description: 'Get a 0ms record 2 times',
         isSecret: false,
-        checkUnlock: (stats) => stats.history.filter(r => r === 0).length >= 2
+        checkUnlock: (stats) => stats.perfectCount >= 2
     },
     {
         id: '3sec_10',
@@ -89,7 +90,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         name: 'Skill',
         description: 'Get a 0ms record 10 times',
         isSecret: false,
-        checkUnlock: (stats) => stats.history.filter(r => r === 0).length >= 10
+        checkUnlock: (stats) => stats.perfectCount >= 10
     },
     {
         id: '3sec_100',
@@ -97,7 +98,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         name: 'Practically 20.00 Rating',
         description: 'Get a 0ms record 100 times',
         isSecret: false,
-        checkUnlock: (stats) => stats.history.filter(r => r === 0).length >= 100
+        checkUnlock: (stats) => stats.perfectCount >= 100
     },
     
     // Play Achievements

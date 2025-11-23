@@ -19,6 +19,7 @@ const MAX_HISTORY = 50;
 let history: number[] = [];
 let totalGames: number = 0;
 let bestRecord: number | null = null;
+let perfectCount: number = 0;
 let unlockedAchievementIds: string[] = [];
 
 // DOM elements
@@ -77,7 +78,6 @@ const backToLoginButton = document.getElementById('backToLoginButton') as HTMLBu
 
 
 // Save history to Firestore
-// Save history to Firestore
 async function saveHistory(): Promise<void> {
     if (currentUser) {
         try {
@@ -88,12 +88,13 @@ async function saveHistory(): Promise<void> {
                 totalGames,
                 bestRecord,
                 rating: currentRating,
+                perfectCount,
                 unlockedAchievementIds
             };
             const newlyUnlocked = checkAchievements(stats);
             unlockedAchievementIds = [...unlockedAchievementIds, ...newlyUnlocked];
             
-            await saveGameHistory(currentUser.uid, history, totalGames, bestRecord, unlockedAchievementIds);
+            await saveGameHistory(currentUser.uid, history, totalGames, bestRecord, perfectCount, unlockedAchievementIds);
             // Save daily rating
             await saveDailyRating(currentUser.uid, currentRating);
         } catch (error) {
@@ -112,6 +113,7 @@ async function clearHistory(): Promise<void> {
             history = [];
             totalGames = 0;
             bestRecord = null;
+            perfectCount = 0;
             unlockedAchievementIds = [];
             drawChart();
         } catch (error) {
@@ -141,12 +143,14 @@ async function loadHistoryFromFirestore(): Promise<void> {
                 } else {
                     bestRecord = historyBest;
                 }
+                perfectCount = data.perfectCount || 0;
                 unlockedAchievementIds = data.unlockedAchievementIds || [];
                 console.log('Set bestRecord to:', bestRecord);
             } else {
                 history = [];
                 totalGames = 0;
                 bestRecord = null;
+                perfectCount = 0;
                 unlockedAchievementIds = [];
             }
             drawChart();
@@ -632,6 +636,11 @@ function checkResult(): void {
     totalGames++;
     if (bestRecord === null || difference < bestRecord) {
         bestRecord = difference;
+    }
+    
+    // Increment perfect count if 0ms
+    if (difference === 0) {
+        perfectCount++;
     }
     
     // Add to history

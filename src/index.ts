@@ -4,6 +4,7 @@ import { saveGameHistory, loadGameHistory, clearGameHistory, saveDailyRating, lo
 import { getDominantColor } from './utils';
 import { User } from 'firebase/auth';
 import logoSrc from './assets/logo/just_3_seconds_logo.svg';
+import { checkAchievements, ACHIEVEMENTS, getAchievementsByCategory, GameStats } from './achievements';
 
 // Game state
 let startTime: number = 0;
@@ -18,6 +19,8 @@ const MAX_HISTORY = 50;
 let history: number[] = [];
 let totalGames: number = 0;
 let bestRecord: number | null = null;
+let perfectCount: number = 0;
+let unlockedAchievementIds: string[] = [];
 
 // DOM elements
 const displayElement = document.getElementById('stopwatchDisplay') as HTMLDivElement;
@@ -75,13 +78,24 @@ const backToLoginButton = document.getElementById('backToLoginButton') as HTMLBu
 
 
 // Save history to Firestore
-// Save history to Firestore
 async function saveHistory(): Promise<void> {
     if (currentUser) {
         try {
-            await saveGameHistory(currentUser.uid, history, totalGames, bestRecord);
-            // Save daily rating
+            // Check for newly unlocked achievements
             const currentRating = calculateRating();
+            const stats: GameStats = {
+                history,
+                totalGames,
+                bestRecord,
+                rating: currentRating,
+                perfectCount,
+                unlockedAchievementIds
+            };
+            const newlyUnlocked = checkAchievements(stats);
+            unlockedAchievementIds = [...unlockedAchievementIds, ...newlyUnlocked];
+            
+            await saveGameHistory(currentUser.uid, history, totalGames, bestRecord, perfectCount, unlockedAchievementIds);
+            // Save daily rating
             await saveDailyRating(currentUser.uid, currentRating);
         } catch (error) {
             console.error('Failed to save history:', error);
@@ -99,6 +113,8 @@ async function clearHistory(): Promise<void> {
             history = [];
             totalGames = 0;
             bestRecord = null;
+            perfectCount = 0;
+            unlockedAchievementIds = [];
             drawChart();
         } catch (error) {
             console.error('Failed to clear history:', error);
@@ -127,11 +143,15 @@ async function loadHistoryFromFirestore(): Promise<void> {
                 } else {
                     bestRecord = historyBest;
                 }
+                perfectCount = data.perfectCount || 0;
+                unlockedAchievementIds = data.unlockedAchievementIds || [];
                 console.log('Set bestRecord to:', bestRecord);
             } else {
                 history = [];
                 totalGames = 0;
                 bestRecord = null;
+                perfectCount = 0;
+                unlockedAchievementIds = [];
             }
             drawChart();
         } catch (error) {
@@ -275,6 +295,77 @@ async function updateUserUI(user: User | null) {
     }
 }
 
+// Render achievements on profile page
+function renderAchievements() {
+    const achievementsSection = document.querySelector('.achievements-section');
+    if (!achievementsSection) return;
+    
+    // Remove existing content
+    const existingContent = achievementsSection.querySelectorAll('.achievement-category-section');
+    existingContent.forEach(el => el.remove());
+    
+    // Category display config
+    const categoryConfig = {
+        'rating': 'Rating',
+        '3sec': '3sec.',
+        'play': 'Play',
+        'expert': 'Expert'
+    };
+    
+    const categories = ['rating', '3sec', 'play', 'expert'];
+    
+    categories.forEach(category => {
+        const categoryAchievements = getAchievementsByCategory(category);
+        if (categoryAchievements.length === 0) return;
+        
+        // Create category section
+        const section = document.createElement('div');
+        section.className = 'achievement-category-section';
+        
+        // Create category title
+        const title = document.createElement('h4');
+        title.className = 'achievement-category-title';
+        title.textContent = `# ${categoryConfig[category as keyof typeof categoryConfig]}`;
+        section.appendChild(title);
+        
+        // Create grid for this category
+        const grid = document.createElement('div');
+        grid.className = 'achievements-grid';
+        
+        categoryAchievements.forEach(achievement => {
+            const isUnlocked = unlockedAchievementIds.includes(achievement.id);
+            const card = document.createElement('div');
+            card.className = `achievement-card ${isUnlocked ? 'unlocked' : 'locked'}${achievement.isSecret ? ' secret' : ''}`;
+            
+            let displayName = achievement.name;
+            let displayDescription = achievement.description;
+            
+            // Hide achievement name if not unlocked
+            if (!isUnlocked) {
+                displayName = '???';
+                // For secret achievements, also hide description
+                if (achievement.isSecret) {
+                    displayDescription = 'Secret achievement';
+                }
+            }
+            
+            card.innerHTML = `
+                <span class="achievement-icon"></span>
+                <div class="achievement-card-header">
+                    <span class="achievement-name">${displayName}</span>
+                </div>
+                <div class="achievement-description">${displayDescription}</div>
+            `;
+            
+            grid.appendChild(card);
+        });
+        
+        section.appendChild(grid);
+        achievementsSection.appendChild(section);
+    });
+}
+
+
 // Profile Page Logic
 async function openProfilePage() {
     if (profilePage && currentUser) {
@@ -326,6 +417,9 @@ async function openProfilePage() {
             bestRecordText = `${bestRecord}ms`;
         }
         if (bestRecordElement) bestRecordElement.textContent = bestRecordText;
+
+        // Render achievements
+        renderAchievements();
 
         profilePage.style.display = 'flex';
         profilePage.offsetHeight; // Force reflow
@@ -542,6 +636,11 @@ function checkResult(): void {
     totalGames++;
     if (bestRecord === null || difference < bestRecord) {
         bestRecord = difference;
+    }
+    
+    // Increment perfect count if 0ms
+    if (difference === 0) {
+        perfectCount++;
     }
     
     // Add to history

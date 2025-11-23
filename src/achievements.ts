@@ -22,7 +22,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'rating_3',
         category: 'rating',
         name: 'Beginner',
-        description: 'Reach a rating of 3.000 or higher',
+        description: 'Reach a rating of 3.00 or higher',
         isSecret: false,
         checkUnlock: (stats) => stats.rating >= 3.0
     },
@@ -30,7 +30,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'rating_5',
         category: 'rating',
         name: 'Intermediate',
-        description: 'Reach a rating of 5.000 or higher',
+        description: 'Reach a rating of 5.00 or higher',
         isSecret: false,
         checkUnlock: (stats) => stats.rating >= 5.0
     },
@@ -38,7 +38,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'rating_7',
         category: 'rating',
         name: 'On Fire',
-        description: 'Reach a rating of 7.000 or higher',
+        description: 'Reach a rating of 7.00 or higher',
         isSecret: false,
         checkUnlock: (stats) => stats.rating >= 7.0
     },
@@ -46,7 +46,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'rating_8',
         category: 'rating',
         name: 'Expert',
-        description: 'Reach a rating of 8.000 or higher',
+        description: 'Reach a rating of 8.00 or higher',
         isSecret: false,
         checkUnlock: (stats) => stats.rating >= 8.0
     },
@@ -54,7 +54,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'rating_9',
         category: 'rating',
         name: 'Divine',
-        description: 'Reach a rating of 9.000 or higher',
+        description: 'Reach a rating of 9.00 or higher',
         isSecret: false,
         checkUnlock: (stats) => stats.rating >= 9.0
     },
@@ -62,7 +62,7 @@ export const ACHIEVEMENTS: Achievement[] = [
         id: 'rating_10',
         category: 'rating',
         name: 'Cheater?',
-        description: 'Reach a rating of 10.000 or higher',
+        description: 'Reach a rating of 10.00 or higher',
         isSecret: false,
         checkUnlock: (stats) => stats.rating >= 10.0
     },

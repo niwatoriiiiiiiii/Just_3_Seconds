@@ -433,7 +433,10 @@ function openPasswordResetModal() {
         passwordResetModal.style.display = 'flex';
         passwordResetModal.offsetHeight;
         passwordResetModal.classList.add('show');
-        if (resetError) resetError.textContent = '';
+        if (resetError) {
+            resetError.textContent = '';
+            resetError.style.color = ''; // Reset color to default
+        }
         if (resetEmailInput) resetEmailInput.value = '';
     }
 }
@@ -873,13 +876,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await sendPasswordResetEmail(email);
             
             if (result.error) {
-                if (resetError) resetError.textContent = result.error;
+                if (resetError) {
+                    resetError.style.color = '#FF5252';
+                    resetError.textContent = result.error;
+                }
             } else {
                 if (resetError) {
                     resetError.style.color = '#00C853';
                     resetError.textContent = 'Password reset email sent! Check your inbox.';
                     setTimeout(() => {
-                        resetError.style.color = '#FF5252';
                         closePasswordResetModal();
                     }, 2000);
                 }
@@ -956,14 +961,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await sendPasswordResetEmail(currentUser.email);
             
             if (result.error) {
-                if (passwordError) passwordError.textContent = result.error;
+                if (passwordError) {
+                    passwordError.style.color = '#FF5252';
+                    passwordError.textContent = result.error;
+                }
             } else {
                 if (passwordError) {
                     passwordError.style.color = '#00C853';
                     passwordError.textContent = `Password reset email sent to ${currentUser.email}!`;
                     setTimeout(() => {
-                        passwordError.style.color = '#FF5252';
                         passwordError.textContent = '';
+                        // Keep color green for fade out effect or next success
+                        // It will be reset to red on next error
                     }, 3000);
                 }
             }

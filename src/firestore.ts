@@ -12,13 +12,14 @@ export interface DailyRating {
 }
 
 // Save game history and stats to Firestore
-export async function saveGameHistory(uid: string, history: number[], totalGames: number, bestRecord: number | null): Promise<void> {
+export async function saveGameHistory(uid: string, history: number[], totalGames: number, bestRecord: number | null, unlockedAchievementIds: string[] = []): Promise<void> {
     try {
         const userRef = doc(db, 'users', uid);
         await setDoc(userRef, {
             gameHistory: history,
             totalGames: totalGames,
             bestRecord: bestRecord,
+            unlockedAchievementIds: unlockedAchievementIds,
             lastUpdated: new Date()
         }, { merge: true });
     } catch (error) {
@@ -28,7 +29,7 @@ export async function saveGameHistory(uid: string, history: number[], totalGames
 }
 
 // Load game history and stats from Firestore
-export async function loadGameHistory(uid: string): Promise<{ history: number[], totalGames: number, bestRecord: number | null } | null> {
+export async function loadGameHistory(uid: string): Promise<{ history: number[], totalGames: number, bestRecord: number | null, unlockedAchievementIds: string[] } | null> {
     try {
         const userRef = doc(db, 'users', uid);
         const docSnap = await getDoc(userRef);
@@ -38,7 +39,8 @@ export async function loadGameHistory(uid: string): Promise<{ history: number[],
             return {
                 history: data.gameHistory || [],
                 totalGames: data.totalGames || 0,
-                bestRecord: data.bestRecord !== undefined ? data.bestRecord : null
+                bestRecord: data.bestRecord !== undefined ? data.bestRecord : null,
+                unlockedAchievementIds: data.unlockedAchievementIds || []
             };
         } else {
             return null;

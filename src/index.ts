@@ -4,6 +4,7 @@ import { saveGameHistory, loadGameHistory, clearGameHistory, saveDailyRating, lo
 import { getDominantColor } from './utils';
 import { User } from 'firebase/auth';
 import logoSrc from './assets/logo/just_3_seconds_logo.svg';
+import { checkAchievements, ACHIEVEMENTS, getAchievementsByCategory, GameStats } from './achievements';
 
 // Game state
 let startTime: number = 0;
@@ -18,6 +19,7 @@ const MAX_HISTORY = 50;
 let history: number[] = [];
 let totalGames: number = 0;
 let bestRecord: number | null = null;
+let unlockedAchievementIds: string[] = [];
 
 // DOM elements
 const displayElement = document.getElementById('stopwatchDisplay') as HTMLDivElement;
@@ -79,9 +81,20 @@ const backToLoginButton = document.getElementById('backToLoginButton') as HTMLBu
 async function saveHistory(): Promise<void> {
     if (currentUser) {
         try {
-            await saveGameHistory(currentUser.uid, history, totalGames, bestRecord);
-            // Save daily rating
+            // Check for newly unlocked achievements
             const currentRating = calculateRating();
+            const stats: GameStats = {
+                history,
+                totalGames,
+                bestRecord,
+                rating: currentRating,
+                unlockedAchievementIds
+            };
+            const newlyUnlocked = checkAchievements(stats);
+            unlockedAchievementIds = [...unlockedAchievementIds, ...newlyUnlocked];
+            
+            await saveGameHistory(currentUser.uid, history, totalGames, bestRecord, unlockedAchievementIds);
+            // Save daily rating
             await saveDailyRating(currentUser.uid, currentRating);
         } catch (error) {
             console.error('Failed to save history:', error);
@@ -99,6 +112,7 @@ async function clearHistory(): Promise<void> {
             history = [];
             totalGames = 0;
             bestRecord = null;
+            unlockedAchievementIds = [];
             drawChart();
         } catch (error) {
             console.error('Failed to clear history:', error);
@@ -127,11 +141,13 @@ async function loadHistoryFromFirestore(): Promise<void> {
                 } else {
                     bestRecord = historyBest;
                 }
+                unlockedAchievementIds = data.unlockedAchievementIds || [];
                 console.log('Set bestRecord to:', bestRecord);
             } else {
                 history = [];
                 totalGames = 0;
                 bestRecord = null;
+                unlockedAchievementIds = [];
             }
             drawChart();
         } catch (error) {
@@ -275,6 +291,57 @@ async function updateUserUI(user: User | null) {
     }
 }
 
+// Render achievements on profile page
+function renderAchievements() {
+    const achievementsSection = document.querySelector('.achievements-section');
+    if (!achievementsSection) return;
+    
+    // Remove existing grid if present
+    const existingGrid = achievementsSection.querySelector('.achievements-grid');
+    if (existingGrid) {
+        existingGrid.remove();
+    }
+    
+    // Create achievements grid
+    const grid = document.createElement('div');
+    grid.className = 'achievements-grid';
+    
+    // Group achievements by category
+    const categories = ['rating', '3sec', 'play', 'expert'];
+    
+    categories.forEach(category => {
+        const categoryAchievements = getAchievementsByCategory(category);
+        
+        categoryAchievements.forEach(achievement => {
+            const isUnlocked = unlockedAchievementIds.includes(achievement.id);
+            const card = document.createElement('div');
+            card.className = `achievement-card ${isUnlocked ? 'unlocked' : 'locked'}${achievement.isSecret ? ' secret' : ''}`;
+            
+            let displayName = achievement.name;
+            let displayDescription = achievement.description;
+            
+            // Hide secret achievement details if not unlocked
+            if (achievement.isSecret && !isUnlocked) {
+                displayName = '???';
+                displayDescription = 'Secret achievement';
+            }
+            
+            card.innerHTML = `
+                <div class="achievement-card-header">
+                    <span class="achievement-name">${displayName}</span>
+                    <span class="achievement-icon">${isUnlocked ? '✓' : '○'}</span>
+                </div>
+                <div class="achievement-description">${displayDescription}</div>
+            `;
+            
+            grid.appendChild(card);
+        });
+    });
+    
+    achievementsSection.appendChild(grid);
+}
+
+
 // Profile Page Logic
 async function openProfilePage() {
     if (profilePage && currentUser) {
@@ -326,6 +393,9 @@ async function openProfilePage() {
             bestRecordText = `${bestRecord}ms`;
         }
         if (bestRecordElement) bestRecordElement.textContent = bestRecordText;
+
+        // Render achievements
+        renderAchievements();
 
         profilePage.style.display = 'flex';
         profilePage.offsetHeight; // Force reflow

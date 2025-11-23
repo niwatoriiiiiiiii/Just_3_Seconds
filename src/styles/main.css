@@ -1130,3 +1130,62 @@ body {
     font-family: 'Orbitron', monospace;
 }
 
+.achievements-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+}
+
+.achievement-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.2s;
+}
+
+.achievement-card.unlocked {
+    background: rgba(0, 102, 255, 0.1);
+    border-color: rgba(0, 102, 255, 0.3);
+}
+
+.achievement-card.locked {
+    opacity: 0.5;
+}
+
+.achievement-card.secret.locked .achievement-name,
+.achievement-card.secret.locked .achievement-description {
+    color: var(--gray);
+    font-style: italic;
+}
+
+.achievement-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.achievement-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+}
+
+.achievement-icon {
+    font-size: 16px;
+}
+
+.achievement-description {
+    font-size: 11px;
+    color: var(--light-gray);
+    line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+    .achievements-grid {
+        grid-template-columns: 1fr;
+    }
+}
+

@@ -921,6 +921,22 @@ body {
     width: 100%;
 }
 
+.rating-chart-container {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+#ratingChart {
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+}
+
 .profile-rating-label {
     color: var(--gray);
     font-size: 14px;

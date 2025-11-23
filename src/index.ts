@@ -1,6 +1,6 @@
 import './styles/main.css';
 import { login, signup, logout, updateUserProfile, updateUserEmail, subscribeToAuthChanges } from './auth';
-import { saveGameHistory, loadGameHistory, clearGameHistory } from './firestore';
+import { saveGameHistory, loadGameHistory, clearGameHistory, saveDailyRating, loadDailyRating, DailyRating } from './firestore';
 import { getDominantColor } from './utils';
 import { User } from 'firebase/auth';
 
@@ -52,6 +52,7 @@ const profileNameLarge = document.getElementById('profileNameLarge') as HTMLHead
 const profileRatingLarge = document.getElementById('profileRatingLarge') as HTMLSpanElement;
 const totalGamesElement = document.getElementById('totalGames') as HTMLSpanElement;
 const bestRecordElement = document.getElementById('bestRecord') as HTMLSpanElement;
+const ratingChartCanvas = document.getElementById('ratingChart') as HTMLCanvasElement;
 
 // Avatar Upload DOM elements
 const avatarPreview = document.getElementById('avatarPreview') as HTMLDivElement;
@@ -66,6 +67,9 @@ async function saveHistory(): Promise<void> {
     if (currentUser) {
         try {
             await saveGameHistory(currentUser.uid, history, totalGames, bestRecord);
+            // Save daily rating
+            const currentRating = calculateRating();
+            await saveDailyRating(currentUser.uid, currentRating);
         } catch (error) {
             console.error('Failed to save history:', error);
         }
@@ -261,6 +265,15 @@ async function openProfilePage() {
         if (profileNameLarge) profileNameLarge.textContent = displayName;
         if (profileRatingLarge) profileRatingLarge.textContent = rating.toFixed(2);
         
+        // Load and draw daily rating chart
+        try {
+            const { loadDailyRating } = await import('./firestore');
+            const dailyRatings = await loadDailyRating(currentUser.uid);
+            drawRatingChart(dailyRatings);
+        } catch (error) {
+            console.error('Failed to load daily ratings:', error);
+        }
+
         // Load avatar for profile page
         try {
             const { loadAvatarImage } = await import('./firestore');
@@ -636,6 +649,95 @@ function drawChart(): void {
     ctx.lineTo(width - padding, targetY);
     ctx.stroke();
     ctx.setLineDash([]);
+}
+
+// Draw daily rating chart
+function drawRatingChart(dailyRatings: DailyRating[]): void {
+    if (!ratingChartCanvas) return;
+    
+    const ctx = ratingChartCanvas.getContext('2d');
+    if (!ctx) return;
+    
+    const width = ratingChartCanvas.width;
+    const height = ratingChartCanvas.height;
+    const padding = 40;
+    const graphWidth = width - padding * 2;
+    const graphHeight = height - padding * 2;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+    
+    // Draw background
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+    ctx.fillRect(0, 0, width, height);
+    
+    // Draw grid lines (Y-axis: 0 to 10)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.font = '10px Inter';
+    ctx.fillStyle = '#666666';
+    ctx.textAlign = 'right';
+    
+    for (let i = 0; i <= 5; i++) {
+        const y = padding + (graphHeight / 5) * i;
+        const value = 10 - (i * 2); // 10, 8, 6, 4, 2, 0
+        
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(width - padding, y);
+        ctx.stroke();
+        
+        ctx.fillText(value.toFixed(1), padding - 10, y + 4);
+    }
+    
+    // Sort ratings by date
+    const sortedRatings = [...dailyRatings].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    // Take last 20 days
+    const displayRatings = sortedRatings.slice(-20);
+    
+    if (displayRatings.length === 0) return;
+    
+    // Draw line
+    ctx.strokeStyle = '#00C853';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    displayRatings.forEach((entry, index) => {
+        const x = padding + (graphWidth / (Math.max(displayRatings.length - 1, 1))) * index;
+        const y = padding + graphHeight - (entry.rating / 10) * graphHeight;
+        
+        if (index === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    });
+    
+    ctx.stroke();
+    
+    // Draw points and labels
+    ctx.textAlign = 'center';
+    
+    displayRatings.forEach((entry, index) => {
+        const x = padding + (graphWidth / (Math.max(displayRatings.length - 1, 1))) * index;
+        const y = padding + graphHeight - (entry.rating / 10) * graphHeight;
+        
+        // Point
+        ctx.fillStyle = '#00C853';
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Date label (MM/DD)
+        const dateObj = new Date(entry.date);
+        const month = dateObj.getMonth() + 1;
+        const day = dateObj.getDate();
+        const dateStr = `${month}/${day}`;
+        
+        ctx.fillStyle = '#666666';
+        ctx.fillText(dateStr, x, height - padding + 20);
+    });
 }
 
 

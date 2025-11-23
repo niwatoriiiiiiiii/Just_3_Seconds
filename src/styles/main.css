@@ -31,7 +31,7 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    padding: 25px 40px;
+    padding: 25px 30px;
     background: var(--black);
     border-bottom: 1px solid var(--border);
     z-index: 100;
@@ -46,6 +46,14 @@ body {
     color: var(--light-gray);
     letter-spacing: 2px;
     text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo-image {
+    height: 28px;
+    width: auto;
 }
 
 .header-right {

@@ -595,7 +595,7 @@ function drawChart(): void {
     
     const width = chartCanvas.width;
     const height = chartCanvas.height;
-    const padding = 60;
+    const padding = 70;
     const graphWidth = width - padding * 2;
     const graphHeight = height - padding * 2;
     
@@ -618,12 +618,12 @@ function drawChart(): void {
     
     // Draw Y-axis labels
     ctx.fillStyle = '#666666';
-    ctx.font = '12px Inter';
+    ctx.font = '12px Orbitron';
     ctx.textAlign = 'right';
     for (let i = 0; i <= 4; i++) {
         const value = Math.round(maxValue * (1 - i / 4));
         const y = padding + (graphHeight / 4) * i;
-        ctx.fillText(`${value}ms`, padding - 10, y + 4);
+        ctx.fillText(`${value} ms`, padding - 10, y + 4);
     }
     
     // Display only the last 20 records for the graph
@@ -713,7 +713,7 @@ function drawRatingChart(dailyRatings: DailyRating[]): void {
     // Draw grid lines (Y-axis: 0 to 10)
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.lineWidth = 1;
-    ctx.font = '10px Inter';
+    ctx.font = '12px Orbitron';
     ctx.fillStyle = '#666666';
     ctx.textAlign = 'right';
     
@@ -775,7 +775,7 @@ function drawRatingChart(dailyRatings: DailyRating[]): void {
         const dateStr = `${month}/${day}`;
         
         ctx.fillStyle = '#666666';
-        ctx.fillText(dateStr, x, height - padding + 20);
+        ctx.fillText(dateStr, x, height - padding + 25);
     });
 }
 

@@ -112,10 +112,22 @@ async function loadHistoryFromFirestore(): Promise<void> {
     if (currentUser) {
         try {
             const data = await loadGameHistory(currentUser.uid);
+            console.log('Loaded data:', data);
             if (data) {
                 history = data.history;
                 totalGames = data.totalGames;
-                bestRecord = data.bestRecord;
+                
+                // Recalculate bestRecord from history to ensure consistency
+                // This fixes the issue where bestRecord in DB might be incorrect (e.g. 12ms) while history has 0ms
+                const historyBest = history.length > 0 ? Math.min(...history) : null;
+                
+                if (data.bestRecord !== undefined && data.bestRecord !== null) {
+                    // Use the better of the two (DB value or calculated history min)
+                    bestRecord = historyBest !== null ? Math.min(data.bestRecord, historyBest) : data.bestRecord;
+                } else {
+                    bestRecord = historyBest;
+                }
+                console.log('Set bestRecord to:', bestRecord);
             } else {
                 history = [];
                 totalGames = 0;

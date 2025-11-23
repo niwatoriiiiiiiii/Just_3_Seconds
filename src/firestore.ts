@@ -38,7 +38,7 @@ export async function loadGameHistory(uid: string): Promise<{ history: number[],
             return {
                 history: data.gameHistory || [],
                 totalGames: data.totalGames || 0,
-                bestRecord: data.bestRecord || null
+                bestRecord: data.bestRecord !== undefined ? data.bestRecord : null
             };
         } else {
             return null;

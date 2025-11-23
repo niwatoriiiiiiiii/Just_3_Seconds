@@ -296,21 +296,37 @@ function renderAchievements() {
     const achievementsSection = document.querySelector('.achievements-section');
     if (!achievementsSection) return;
     
-    // Remove existing grid if present
-    const existingGrid = achievementsSection.querySelector('.achievements-grid');
-    if (existingGrid) {
-        existingGrid.remove();
-    }
+    // Remove existing content
+    const existingContent = achievementsSection.querySelectorAll('.achievement-category-section');
+    existingContent.forEach(el => el.remove());
     
-    // Create achievements grid
-    const grid = document.createElement('div');
-    grid.className = 'achievements-grid';
+    // Category display config
+    const categoryConfig = {
+        'rating': 'Rating',
+        '3sec': '3sec.',
+        'play': 'Play',
+        'expert': 'Expert'
+    };
     
-    // Group achievements by category
     const categories = ['rating', '3sec', 'play', 'expert'];
     
     categories.forEach(category => {
         const categoryAchievements = getAchievementsByCategory(category);
+        if (categoryAchievements.length === 0) return;
+        
+        // Create category section
+        const section = document.createElement('div');
+        section.className = 'achievement-category-section';
+        
+        // Create category title
+        const title = document.createElement('h4');
+        title.className = 'achievement-category-title';
+        title.textContent = `# ${categoryConfig[category as keyof typeof categoryConfig]}`;
+        section.appendChild(title);
+        
+        // Create grid for this category
+        const grid = document.createElement('div');
+        grid.className = 'achievements-grid';
         
         categoryAchievements.forEach(achievement => {
             const isUnlocked = unlockedAchievementIds.includes(achievement.id);
@@ -336,9 +352,10 @@ function renderAchievements() {
             
             grid.appendChild(card);
         });
+        
+        section.appendChild(grid);
+        achievementsSection.appendChild(section);
     });
-    
-    achievementsSection.appendChild(grid);
 }
 
 

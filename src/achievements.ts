@@ -110,14 +110,6 @@ export const ACHIEVEMENTS: Achievement[] = [
         checkUnlock: (stats) => stats.totalGames >= 1
     },
     {
-        id: 'play_10',
-        category: 'play',
-        name: 'Warming Up',
-        description: 'Play 10 games',
-        isSecret: false,
-        checkUnlock: (stats) => stats.totalGames >= 10
-    },
-    {
         id: 'play_100',
         category: 'play',
         name: 'Is This Fun?',

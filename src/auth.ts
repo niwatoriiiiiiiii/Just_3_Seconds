@@ -5,6 +5,8 @@ import {
     onAuthStateChanged, 
     updateProfile,
     verifyBeforeUpdateEmail,
+    updatePassword,
+    sendPasswordResetEmail as firebaseSendPasswordResetEmail,
     User 
 } from 'firebase/auth';
 import { auth } from './firebase-config';
@@ -66,4 +68,26 @@ export const updateUserEmail = async (email: string) => {
 
 export const subscribeToAuthChanges = (callback: (user: User | null) => void) => {
     return onAuthStateChanged(auth, callback);
+};
+
+export const updateUserPassword = async (newPassword: string) => {
+    try {
+        if (auth.currentUser) {
+            await updatePassword(auth.currentUser, newPassword);
+            return { error: null };
+        } else {
+            return { error: "No user logged in" };
+        }
+    } catch (error: any) {
+        return { error: error.message };
+    }
+};
+
+export const sendPasswordResetEmail = async (email: string) => {
+    try {
+        await firebaseSendPasswordResetEmail(auth, email);
+        return { error: null, message: "Password reset email sent" };
+    } catch (error: any) {
+        return { error: error.message };
+    }
 };

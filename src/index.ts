@@ -336,16 +336,19 @@ function renderAchievements() {
             let displayName = achievement.name;
             let displayDescription = achievement.description;
             
-            // Hide secret achievement details if not unlocked
-            if (achievement.isSecret && !isUnlocked) {
+            // Hide achievement name if not unlocked
+            if (!isUnlocked) {
                 displayName = '???';
-                displayDescription = 'Secret achievement';
+                // For secret achievements, also hide description
+                if (achievement.isSecret) {
+                    displayDescription = 'Secret achievement';
+                }
             }
             
             card.innerHTML = `
+                <span class="achievement-icon"></span>
                 <div class="achievement-card-header">
                     <span class="achievement-name">${displayName}</span>
-                    <span class="achievement-icon">${isUnlocked ? '✓' : '○'}</span>
                 </div>
                 <div class="achievement-description">${displayDescription}</div>
             `;

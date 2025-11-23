@@ -149,25 +149,40 @@
                 <h2>Manage Account</h2>
                 <button id="closeProfileButton" class="close-button">×</button>
             </div>
-            <div class="modal-body">
-                <form id="profileForm">
-                    <div class="form-group">
-                        <label for="displayName">Display Name</label>
-                        <input type="text" id="displayName" required placeholder="Enter your display name">
+            <div class="modal-body two-column">
+                <div class="profile-form-section">
+                    <form id="profileForm">
+                        <div class="form-group">
+                            <label for="displayName">Display Name</label>
+                            <input type="text" id="displayName" required placeholder="Enter your display name">
+                        </div>
+                        <div class="form-group">
+                            <label for="displayEmail">Email Address</label>
+                            <input type="email" id="displayEmail" required placeholder="Enter your email address">
+                        </div>
+                        <div id="profileError" class="error-message"></div>
+                        <button type="submit" class="action-button full-width">Save Changes</button>
+                    </form>
+                    
+                    <div class="modal-divider"></div>
+                    
+                    <div class="logout-section">
+                        <p class="logout-text">Sign out of your account</p>
+                        <button id="modalLogoutButton" class="danger-button full-width">Logout</button>
                     </div>
-                    <div class="form-group">
-                        <label for="displayEmail">Email Address</label>
-                        <input type="email" id="displayEmail" required placeholder="Enter your email address">
+                </div>
+                
+                <div class="avatar-upload-section">
+                    <h3>Profile Picture</h3>
+                    <div class="avatar-preview-container">
+                        <div id="avatarPreview" class="avatar-preview">U</div>
                     </div>
-                    <div id="profileError" class="error-message"></div>
-                    <button type="submit" class="action-button full-width">Save Changes</button>
-                </form>
-                
-                <div class="modal-divider"></div>
-                
-                <div class="logout-section">
-                    <p class="logout-text">Sign out of your account</p>
-                    <button id="modalLogoutButton" class="danger-button full-width">Logout</button>
+                    <div class="avatar-upload-controls">
+                        <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                        <button id="selectAvatarButton" class="action-button full-width">Choose Image</button>
+                        <div id="avatarError" class="error-message"></div>
+                        <p class="avatar-hint">Max size: 256x256 pixels</p>
+                    </div>
                 </div>
             </div>
         </div>

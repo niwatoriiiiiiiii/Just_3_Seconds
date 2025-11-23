@@ -1,6 +1,7 @@
 import './styles/main.css';
 import { login, signup, logout, updateUserProfile, updateUserEmail, subscribeToAuthChanges } from './auth';
 import { saveGameHistory, loadGameHistory, clearGameHistory } from './firestore';
+import { getDominantColor } from './utils';
 import { User } from 'firebase/auth';
 
 // Game state
@@ -51,6 +52,13 @@ const profileNameLarge = document.getElementById('profileNameLarge') as HTMLHead
 const profileRatingLarge = document.getElementById('profileRatingLarge') as HTMLSpanElement;
 const totalGamesElement = document.getElementById('totalGames') as HTMLSpanElement;
 const bestRecordElement = document.getElementById('bestRecord') as HTMLSpanElement;
+
+// Avatar Upload DOM elements
+const avatarPreview = document.getElementById('avatarPreview') as HTMLDivElement;
+const avatarInput = document.getElementById('avatarInput') as HTMLInputElement;
+const selectAvatarButton = document.getElementById('selectAvatarButton') as HTMLButtonElement;
+const avatarError = document.getElementById('avatarError') as HTMLDivElement;
+
 
 // Save history to Firestore
 // Save history to Firestore
@@ -141,7 +149,7 @@ async function updateUserUI(user: User | null) {
         userSection.innerHTML = `
             <div class="user-profile">
                 <div class="user-info">
-                    <div class="user-avatar">${initial}</div>
+                    <div class="user-avatar" id="menuUserAvatar">${initial}</div>
                     <div class="user-details">
                         <div class="user-name">${displayName}</div>
                         <button id="manageAccountButton" class="text-button small" style="text-align: left; padding: 0; color: var(--gray); font-size: 12px;">Manage Account</button>
@@ -153,6 +161,20 @@ async function updateUserUI(user: User | null) {
                 </div>
             </div>
         `;
+
+        // Load avatar for menu
+        try {
+            const { loadAvatarImage } = await import('./firestore');
+            const avatarImage = await loadAvatarImage(user.uid);
+            const menuAvatar = document.getElementById('menuUserAvatar');
+            
+            if (menuAvatar && avatarImage) {
+                menuAvatar.style.backgroundImage = `url(${avatarImage})`;
+                menuAvatar.textContent = '';
+            }
+        } catch (error) {
+            console.error('Failed to load menu avatar:', error);
+        }
         
         // Sidebar logout button removed
         
@@ -182,7 +204,10 @@ async function updateUserUI(user: User | null) {
             sidebarProfileButton.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                openProfilePage();
+                e.stopPropagation();
+                (async () => {
+                    await openProfilePage();
+                })();
                 // Close sidebar
                 const sidebar = document.getElementById('menuModal');
                 if (sidebar) {
@@ -222,16 +247,38 @@ async function updateUserUI(user: User | null) {
 }
 
 // Profile Page Logic
-function openProfilePage() {
+async function openProfilePage() {
     if (profilePage && currentUser) {
         // Update data
         const displayName = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
         const initial = displayName.charAt(0).toUpperCase();
         const rating = calculateRating();
         
-        if (profileAvatarLarge) profileAvatarLarge.textContent = initial;
+        if (profileAvatarLarge) {
+            profileAvatarLarge.textContent = initial;
+            profileAvatarLarge.style.backgroundImage = ''; // Reset
+        }
         if (profileNameLarge) profileNameLarge.textContent = displayName;
         if (profileRatingLarge) profileRatingLarge.textContent = rating.toFixed(2);
+        
+        // Load avatar for profile page
+        try {
+            const { loadAvatarImage } = await import('./firestore');
+            const avatarImage = await loadAvatarImage(currentUser.uid);
+            
+            if (profileAvatarLarge && avatarImage) {
+                profileAvatarLarge.style.backgroundImage = `url(${avatarImage})`;
+                profileAvatarLarge.textContent = '';
+                
+                // Dynamic glow
+                const glowColor = await getDominantColor(avatarImage);
+                profileAvatarLarge.style.boxShadow = `0 0 30px ${glowColor}`;
+            } else if (profileAvatarLarge) {
+                 profileAvatarLarge.style.boxShadow = ''; // Reset to default CSS
+            }
+        } catch (error) {
+            console.error('Failed to load profile avatar:', error);
+        }
         
         if (totalGamesElement) totalGamesElement.textContent = totalGames.toString();
         
@@ -298,7 +345,8 @@ function updateAuthModalState() {
 }
 
 // Profile Modal Logic
-function openProfileModal() {
+// Profile Modal Logic
+async function openProfileModal() {
     if (profileModal) {
         profileModal.style.display = 'flex';
         profileModal.offsetHeight; // Force reflow
@@ -306,6 +354,36 @@ function openProfileModal() {
         if (currentUser) {
             displayNameInput.value = currentUser.displayName || '';
             displayEmailInput.value = currentUser.email || '';
+            
+            // Update avatar preview
+            if (avatarPreview) {
+                const displayName = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
+                const initial = displayName.charAt(0).toUpperCase();
+                
+                // Load avatar from Firestore
+                try {
+                    const { loadAvatarImage } = await import('./firestore');
+                    const avatarImage = await loadAvatarImage(currentUser.uid);
+                    
+                    if (avatarImage) {
+                        avatarPreview.style.backgroundImage = `url(${avatarImage})`;
+                        avatarPreview.textContent = '';
+                        
+                        // Dynamic glow
+                        const glowColor = await getDominantColor(avatarImage);
+                        avatarPreview.style.boxShadow = `0 0 20px ${glowColor}`;
+                    } else {
+                        avatarPreview.style.backgroundImage = '';
+                        avatarPreview.textContent = initial;
+                        avatarPreview.style.boxShadow = '';
+                    }
+                } catch (error) {
+                    console.error('Failed to load avatar:', error);
+                    avatarPreview.style.backgroundImage = '';
+                    avatarPreview.textContent = initial;
+                    avatarPreview.style.boxShadow = '';
+                }
+            }
         }
         if (profileError) profileError.textContent = '';
     }
@@ -764,5 +842,78 @@ document.addEventListener('DOMContentLoaded', () => {
     // Profile Page Event Listeners
     if (backToGameButton) {
         backToGameButton.addEventListener('click', closeProfilePage);
+    }
+
+    // Avatar Upload Event Listeners
+    if (selectAvatarButton && avatarInput) {
+        selectAvatarButton.addEventListener('click', () => {
+            avatarInput.click();
+        });
+
+        avatarInput.addEventListener('change', async (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (!file) return;
+
+            // Clear previous error
+            if (avatarError) avatarError.textContent = '';
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                if (avatarError) avatarError.textContent = 'Please select an image file';
+                return;
+            }
+
+            // Validate file size (max 1MB)
+            if (file.size > 1024 * 1024) {
+                if (avatarError) avatarError.textContent = 'Image size must be less than 1MB';
+                return;
+            }
+
+            // Create image to check dimensions
+            const img = new Image();
+            const reader = new FileReader();
+
+            reader.onload = (event) => {
+                img.src = event.target?.result as string;
+            };
+
+            img.onload = async () => {
+                // Validate dimensions
+                if (img.width > 256 || img.height > 256) {
+                    if (avatarError) avatarError.textContent = 'Image must be 256x256 pixels or smaller';
+                    return;
+                }
+
+                // Convert to base64 and save
+                const base64 = reader.result as string;
+                
+                // Update preview
+                if (avatarPreview) {
+                    avatarPreview.style.backgroundImage = `url(${base64})`;
+                    avatarPreview.textContent = '';
+                }
+
+                // Save to Firestore
+                if (currentUser) {
+                    try {
+                        const { saveAvatarImage } = await import('./firestore');
+                        await saveAvatarImage(currentUser.uid, base64);
+                        
+                        if (avatarError) {
+                            avatarError.style.color = 'var(--green)';
+                            avatarError.textContent = 'Avatar updated successfully!';
+                            setTimeout(() => {
+                                if (avatarError) avatarError.textContent = '';
+                            }, 3000);
+                        }
+                    } catch (error) {
+                        console.error('Failed to update avatar:', error);
+                        if (avatarError) avatarError.textContent = 'Failed to update avatar. Please try again.';
+                    }
+                }
+            };
+
+            reader.readAsDataURL(file);
+        });
     }
 });

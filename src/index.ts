@@ -3,6 +3,7 @@ import { login, signup, logout, updateUserProfile, updateUserEmail, updateUserPa
 import { saveGameHistory, loadGameHistory, clearGameHistory, saveDailyRating, loadDailyRating, DailyRating } from './firestore';
 import { getDominantColor } from './utils';
 import { User } from 'firebase/auth';
+import logoSrc from './assets/logo/just_3_seconds_logo.svg';
 
 // Game state
 let startTime: number = 0;
@@ -783,6 +784,12 @@ function drawRatingChart(dailyRatings: DailyRating[]): void {
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Just 3 Seconds - Game Initialized');
+    
+    // Set logo
+    const headerLogo = document.getElementById('headerLogo') as HTMLImageElement;
+    if (headerLogo) {
+        headerLogo.src = logoSrc;
+    }
     
     // Subscribe to auth changes
     subscribeToAuthChanges((user) => {

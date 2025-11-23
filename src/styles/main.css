@@ -841,6 +841,13 @@ body {
     margin-bottom: 20px;
 }
 
+.password-change-description {
+    font-size: 14px;
+    color: var(--gray);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
 .text-button {
     background: none;
     border: none;

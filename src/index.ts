@@ -64,6 +64,7 @@ const passwordChangeForm = document.getElementById('passwordChangeForm') as HTML
 const newPasswordInput = document.getElementById('newPassword') as HTMLInputElement;
 const confirmPasswordInput = document.getElementById('confirmPassword') as HTMLInputElement;
 const passwordError = document.getElementById('passwordError') as HTMLDivElement;
+const sendPasswordResetButton = document.getElementById('sendPasswordResetButton') as HTMLButtonElement;
 const passwordResetModal = document.getElementById('passwordResetModal') as HTMLDivElement;
 const passwordResetForm = document.getElementById('passwordResetForm') as HTMLFormElement;
 const resetEmailInput = document.getElementById('resetEmail') as HTMLInputElement;
@@ -942,46 +943,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Password Change Event Listener
-    if (passwordChangeForm) {
-        passwordChangeForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const newPassword = newPasswordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
-            
-            if (passwordError) passwordError.textContent = '';
-            
-            if (!newPassword || !confirmPassword) {
-                if (passwordError) passwordError.textContent = 'Please fill in all fields.';
+    // Send Password Reset Email from Manage Account
+    if (sendPasswordResetButton) {
+        sendPasswordResetButton.addEventListener('click', async () => {
+            if (!currentUser || !currentUser.email) {
+                if (passwordError) passwordError.textContent = 'No user logged in.';
                 return;
             }
             
-            if (newPassword !== confirmPassword) {
-                if (passwordError) passwordError.textContent = 'Passwords do not match.';
-                return;
-            }
+            if (passwordError) passwordError.textContent = 'Sending...';
             
-            if (newPassword.length < 6) {
-                if (passwordError) passwordError.textContent = 'Password must be at least 6 characters.';
-                return;
-            }
-            
-            if (passwordError) passwordError.textContent = 'Updating password...';
-            
-            const result = await updateUserPassword(newPassword);
+            const result = await sendPasswordResetEmail(currentUser.email);
             
             if (result.error) {
                 if (passwordError) passwordError.textContent = result.error;
             } else {
                 if (passwordError) {
                     passwordError.style.color = '#00C853';
-                    passwordError.textContent = 'Password changed successfully!';
+                    passwordError.textContent = `Password reset email sent to ${currentUser.email}!`;
                     setTimeout(() => {
                         passwordError.style.color = '#FF5252';
                         passwordError.textContent = '';
-                        newPasswordInput.value = '';
-                        confirmPasswordInput.value = '';
-                    }, 2000);
+                    }, 3000);
                 }
             }
         });

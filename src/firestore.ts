@@ -6,6 +6,11 @@ export interface GameHistory {
     updatedAt: number;
 }
 
+export interface DailyRating {
+    date: string;
+    rating: number;
+}
+
 // Save game history and stats to Firestore
 export async function saveGameHistory(uid: string, history: number[], totalGames: number, bestRecord: number | null): Promise<void> {
     try {
@@ -86,5 +91,52 @@ export async function loadAvatarImage(uid: string): Promise<string | null> {
     } catch (error) {
         console.error("Error loading avatar:", error);
         return null;
+    }
+}
+
+// Save daily rating to Firestore
+export async function saveDailyRating(uid: string, rating: number): Promise<void> {
+    try {
+        const userRef = doc(db, 'users', uid);
+        const docSnap = await getDoc(userRef);
+        let ratingHistory: DailyRating[] = [];
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            ratingHistory = data.ratingHistory || [];
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+        const existingEntryIndex = ratingHistory.findIndex(entry => entry.date === today);
+
+        if (existingEntryIndex !== -1) {
+            ratingHistory[existingEntryIndex].rating = rating;
+        } else {
+            ratingHistory.push({ date: today, rating: rating });
+        }
+
+        await setDoc(userRef, {
+            ratingHistory: ratingHistory
+        }, { merge: true });
+    } catch (error) {
+        console.error("Error saving daily rating:", error);
+        throw error;
+    }
+}
+
+// Load daily rating history from Firestore
+export async function loadDailyRating(uid: string): Promise<DailyRating[]> {
+    try {
+        const userRef = doc(db, 'users', uid);
+        const docSnap = await getDoc(userRef);
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            return data.ratingHistory || [];
+        }
+        return [];
+    } catch (error) {
+        console.error("Error loading daily rating:", error);
+        return [];
     }
 }

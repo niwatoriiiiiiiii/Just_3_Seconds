@@ -134,7 +134,7 @@ body {
     border: 1px solid #30363d;
     border-radius: 20px; /* More rounded */
     width: 90%;
-    max-width: 600px; /* Wider */
+    max-width: 1000px; /* Wider for 2-column layout */
     margin: auto;
     position: relative;
     transform: translateY(20px);
@@ -661,6 +661,8 @@ body {
     justify-content: center;
     font-size: 18px;
     color: white;
+    background-size: cover;
+    background-position: center;
 }
 
 .user-rating {
@@ -892,9 +894,12 @@ body {
     justify-content: center;
     font-size: 48px;
     font-weight: 700;
+    font-weight: 700;
     color: white;
     margin-bottom: 20px;
     box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3);
+    background-size: cover;
+    background-position: center;
 }
 
 .profile-name {
@@ -975,3 +980,74 @@ body {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* ===== 2-Column Modal Layout ===== */
+.modal-body.two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    padding: 40px 50px;
+}
+
+.profile-form-section {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===== Avatar Upload Section ===== */
+.avatar-upload-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.avatar-upload-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--light-gray);
+    margin: 0;
+    text-align: center;
+}
+
+.avatar-preview-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.avatar-preview {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: var(--blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    font-weight: 700;
+    color: white;
+    box-shadow: 0 4px 20px rgba(0, 102, 255, 0.3);
+    background-size: cover;
+    background-position: center;
+}
+
+.avatar-upload-controls {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.avatar-hint {
+    font-size: 12px;
+    color: var(--gray);
+    text-align: center;
+    margin: 0;
+}
+

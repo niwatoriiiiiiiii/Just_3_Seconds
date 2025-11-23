@@ -58,3 +58,33 @@ export async function clearGameHistory(uid: string): Promise<void> {
         throw error;
     }
 }
+
+// Save avatar image to Firestore
+export async function saveAvatarImage(uid: string, base64Image: string): Promise<void> {
+    try {
+        const userRef = doc(db, 'users', uid);
+        await setDoc(userRef, {
+            avatarImage: base64Image
+        }, { merge: true });
+    } catch (error) {
+        console.error("Error saving avatar:", error);
+        throw error;
+    }
+}
+
+// Load avatar image from Firestore
+export async function loadAvatarImage(uid: string): Promise<string | null> {
+    try {
+        const userRef = doc(db, 'users', uid);
+        const docSnap = await getDoc(userRef);
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            return data.avatarImage || null;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error loading avatar:", error);
+        return null;
+    }
+}

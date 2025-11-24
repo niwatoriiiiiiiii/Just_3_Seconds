@@ -635,9 +635,6 @@ function checkResult(): void {
     
     // Update stats
     totalGames++;
-    if (bestRating === null || difference < bestRating) {
-        bestRating = difference;
-    }
     
     // Increment perfect count if 0ms
     if (difference === 0) {
@@ -646,10 +643,14 @@ function checkResult(): void {
     
     // Add to history
     history.push(difference);
-    if (history.length > MAX_HISTORY) {
-        history.shift(); // Remove oldest entry
+    if (history.length > MAX_HISTORY) history.shift();　// Remove oldest entry
+
+    const currentRating = calculateRating();
+    if (currentRating > bestRating) {
+        bestRating = currentRating;
     }
-    saveHistory();
+
+    saveHistory(); // save history, totalGames, perfectCount, unlockedAchievementIds etc.
     drawChart();
     
     if (difference === 0) {

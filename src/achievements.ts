@@ -10,7 +10,6 @@ export interface Achievement {
 export interface GameStats {
     history: number[];
     totalGames: number;
-    bestRecord: number | null;
     rating: number;
     perfectCount: number;
     unlockedAchievementIds: string[];

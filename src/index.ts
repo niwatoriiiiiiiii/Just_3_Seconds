@@ -984,28 +984,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    // Password reset rate limiting (persisted in localStorage)
+    const PASSWORD_RESET_COOLDOWN = 60000; // 60 seconds
+    const RESET_TIMESTAMP_KEY = 'lastPasswordResetTime';
+    
     // Password Reset Event Listeners
     if (passwordResetForm) {
         passwordResetForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = resetEmailInput.value;
             
-            if (resetError) resetError.textContent = 'Sending...';
-            const result = await sendPasswordResetEmail(email);
+            // Check rate limit (read from localStorage)
+            const now = Date.now();
+            const lastResetTime = parseInt(localStorage.getItem(RESET_TIMESTAMP_KEY) || '0', 10);
+            const timeSinceLastReset = now - lastResetTime;
             
-            if (result.error) {
+            if (timeSinceLastReset < PASSWORD_RESET_COOLDOWN) {
+                const remainingSeconds = Math.ceil((PASSWORD_RESET_COOLDOWN - timeSinceLastReset) / 1000);
                 if (resetError) {
                     resetError.style.color = '#FF5252';
-                    resetError.textContent = result.error;
+                    resetError.textContent = `Please wait ${remainingSeconds} seconds before requesting another reset.`;
                 }
-            } else {
-                if (resetError) {
-                    resetError.style.color = '#00C853';
-                    resetError.textContent = 'Password reset email sent! Check your inbox.';
-                    setTimeout(() => {
-                        closePasswordResetModal();
-                    }, 2000);
-                }
+                return;
+            }
+            
+            if (resetError) resetError.textContent = 'Sending...';
+            
+            // Update last reset time in localStorage
+            localStorage.setItem(RESET_TIMESTAMP_KEY, now.toString());
+            
+            // Send password reset email (ignore result to prevent enumeration)
+            await sendPasswordResetEmail(email);
+            
+            // Always show success message regardless of result
+            // This prevents user enumeration through:
+            // 1. Response time differences
+            // 2. Error message differences
+            // 3. Rate limit error differences
+            if (resetError) {
+                resetError.style.color = '#00C853';
+                resetError.textContent = 'Password reset email sent! Check your inbox.';
+                setTimeout(() => {
+                    closePasswordResetModal();
+                }, 500);
             }
         });
     }

@@ -32,6 +32,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './src/index.html',
       filename: 'index.html',
+      favicon: './src/assets/logo/just_3_seconds_logo.svg',
     }),
   ],
   devServer: {

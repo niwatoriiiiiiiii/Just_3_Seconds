@@ -16,7 +16,12 @@ export const login = async (email: string, password: string) => {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         return { user: userCredential.user, error: null };
     } catch (error: any) {
-        return { user: null, error: error.message };
+        // Sanitize error message to prevent email enumeration
+        let errorMessage = error.message;
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+            errorMessage = 'Invalid email or password.';
+        }
+        return { user: null, error: errorMessage };
     }
 };
 

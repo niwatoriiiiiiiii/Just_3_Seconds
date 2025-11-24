@@ -1,7 +1,11 @@
+import admin from 'firebase-admin';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-import * as admin from 'firebase-admin';
-import * as fs from 'fs';
-import * as path from 'path';
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Path to the service account key
 const serviceAccountPath = path.join(__dirname, '../service-account-key.json');
@@ -14,7 +18,8 @@ if (!fs.existsSync(serviceAccountPath)) {
 }
 
 // Initialize Firebase Admin
-const serviceAccount = require(serviceAccountPath);
+const serviceAccountData = fs.readFileSync(serviceAccountPath, 'utf8');
+const serviceAccount = JSON.parse(serviceAccountData);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -31,9 +36,11 @@ async function enableEmailEnumerationProtection() {
       },
     });
 
-    console.log('Successfully enabled Email Enumeration Protection!');
+    console.log('✅ Successfully enabled Email Enumeration Protection!');
+    console.log('The server will now return the same response time regardless of whether a user exists.');
+    process.exit(0);
   } catch (error) {
-    console.error('Error updating project configuration:', error);
+    console.error('❌ Error updating project configuration:', error);
     process.exit(1);
   }
 }

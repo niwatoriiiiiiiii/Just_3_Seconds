@@ -18,7 +18,7 @@ let isLoginMode: boolean = true;
 const MAX_HISTORY = 50;
 let history: number[] = [];
 let totalGames: number = 0;
-let bestRecord: number | null = null;
+let bestRating: number = 0; // Highest rating ever achieved
 let perfectCount: number = 0;
 let unlockedAchievementIds: string[] = [];
 
@@ -55,7 +55,9 @@ const profileAvatarLarge = document.getElementById('profileAvatarLarge') as HTML
 const profileNameLarge = document.getElementById('profileNameLarge') as HTMLHeadingElement;
 const profileRatingLarge = document.getElementById('profileRatingLarge') as HTMLSpanElement;
 const totalGamesElement = document.getElementById('totalGames') as HTMLSpanElement;
-const bestRecordElement = document.getElementById('bestRecord') as HTMLSpanElement;
+const bestRatingElement = document.getElementById('bestRating') as HTMLSpanElement;
+const perfectCountElement = document.getElementById('perfectCount') as HTMLSpanElement;
+const achievementRateElement = document.getElementById('achievementRate') as HTMLSpanElement;
 const ratingChartCanvas = document.getElementById('ratingChart') as HTMLCanvasElement;
 
 // Avatar Upload DOM elements
@@ -83,10 +85,15 @@ async function saveHistory(): Promise<void> {
         try {
             // Check for newly unlocked achievements
             const currentRating = calculateRating();
+            
+            // Update best rating if current is higher
+            if (currentRating > bestRating) {
+                bestRating = currentRating;
+            }
+            
             const stats: GameStats = {
                 history,
                 totalGames,
-                bestRecord,
                 rating: currentRating,
                 perfectCount,
                 unlockedAchievementIds
@@ -94,7 +101,7 @@ async function saveHistory(): Promise<void> {
             const newlyUnlocked = checkAchievements(stats);
             unlockedAchievementIds = [...unlockedAchievementIds, ...newlyUnlocked];
             
-            await saveGameHistory(currentUser.uid, history, totalGames, bestRecord, perfectCount, unlockedAchievementIds);
+            await saveGameHistory(currentUser.uid, history, totalGames, perfectCount, unlockedAchievementIds, bestRating);
             // Save daily rating
             await saveDailyRating(currentUser.uid, currentRating);
         } catch (error) {
@@ -112,7 +119,7 @@ async function clearHistory(): Promise<void> {
             await clearGameHistory(currentUser.uid);
             history = [];
             totalGames = 0;
-            bestRecord = null;
+            bestRating = 0;
             perfectCount = 0;
             unlockedAchievementIds = [];
             drawChart();
@@ -132,24 +139,13 @@ async function loadHistoryFromFirestore(): Promise<void> {
             if (data) {
                 history = data.history;
                 totalGames = data.totalGames;
-                
-                // Recalculate bestRecord from history to ensure consistency
-                // This fixes the issue where bestRecord in DB might be incorrect (e.g. 12ms) while history has 0ms
-                const historyBest = history.length > 0 ? Math.min(...history) : null;
-                
-                if (data.bestRecord !== undefined && data.bestRecord !== null) {
-                    // Use the better of the two (DB value or calculated history min)
-                    bestRecord = historyBest !== null ? Math.min(data.bestRecord, historyBest) : data.bestRecord;
-                } else {
-                    bestRecord = historyBest;
-                }
+                bestRating = data.bestRating || 0;
                 perfectCount = data.perfectCount || 0;
                 unlockedAchievementIds = data.unlockedAchievementIds || [];
-                console.log('Set bestRecord to:', bestRecord);
             } else {
                 history = [];
                 totalGames = 0;
-                bestRecord = null;
+                bestRating = 0;
                 perfectCount = 0;
                 unlockedAchievementIds = [];
             }
@@ -158,12 +154,12 @@ async function loadHistoryFromFirestore(): Promise<void> {
             console.error('Failed to load history:', error);
             history = [];
             totalGames = 0;
-            bestRecord = null;
+            bestRating = 0;
         }
     } else {
         history = [];
         totalGames = 0;
-        bestRecord = null;
+        bestRating = 0;
         drawChart();
     }
 }
@@ -411,12 +407,17 @@ async function openProfilePage() {
         
         if (totalGamesElement) totalGamesElement.textContent = totalGames.toString();
         
-        // Display best record
-        let bestRecordText = '-';
-        if (bestRecord !== null) {
-            bestRecordText = `${bestRecord}ms`;
-        }
-        if (bestRecordElement) bestRecordElement.textContent = bestRecordText;
+        // Display best rating
+        if (bestRatingElement) bestRatingElement.textContent = bestRating.toFixed(2);
+
+        // Display perfect count
+        if (perfectCountElement) perfectCountElement.textContent = perfectCount.toString();
+
+        // Calculate and display achievement rate
+        const totalAchievements = ACHIEVEMENTS.length;
+        const unlockedCount = unlockedAchievementIds.length;
+        const achievementRate = totalAchievements > 0 ? Math.round((unlockedCount / totalAchievements) * 100) : 0;
+        if (achievementRateElement) achievementRateElement.textContent = `${achievementRate}%`;
 
         // Render achievements
         renderAchievements();
@@ -634,8 +635,8 @@ function checkResult(): void {
     
     // Update stats
     totalGames++;
-    if (bestRecord === null || difference < bestRecord) {
-        bestRecord = difference;
+    if (bestRating === null || difference < bestRating) {
+        bestRating = difference;
     }
     
     // Increment perfect count if 0ms

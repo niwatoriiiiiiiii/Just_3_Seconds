@@ -995,8 +995,9 @@ body {
 }
 
 .profile-stats {
-    display: flex;
-    justify-content: space-around;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
     width: 100%;
     margin-bottom: 40px;
     padding: 20px;
@@ -1013,7 +1014,7 @@ body {
 .stat-label {
     color: var(--gray);
     font-size: 10px;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 1px;
     font-family: 'Orbitron', monospace;
@@ -1022,6 +1023,7 @@ body {
 .stat-value {
     font-size: 20px;
     font-weight: 400;
+    letter-spacing: 1px;
     font-family: 'Orbitron', monospace;
 }
 

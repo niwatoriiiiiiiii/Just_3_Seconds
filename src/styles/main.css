@@ -1052,6 +1052,13 @@ body {
     flex-direction: column;
 }
 
+.profile-right-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
 /* ===== Avatar Upload Section ===== */
 .avatar-upload-section {
     display: flex;
